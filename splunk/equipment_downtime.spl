@@ -1,0 +1,3 @@
+index=pharma_manufacturing source="equipment_downtime.csv"
+| stats sum(downtime_minutes) as total_downtime by equipment_id
+| sort -total_downtime

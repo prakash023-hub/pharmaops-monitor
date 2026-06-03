@@ -1,0 +1,9 @@
+index=pharma_manufacturing source="moisture_logs.csv"
+| eval _time=strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+| timechart span=1h avg(moisture_pct) as moisture
+| streamstats window=30 current=true median(moisture) as median
+| eval absDev=(abs(moisture-median))
+| streamstats window=30 current=true median(absDev) as medianAbsDev
+| eval lowerBound=(median-medianAbsDev*3), upperBound=(median+medianAbsDev*3)
+| eval isOutlier=if(moisture < lowerBound OR moisture > upperBound, 1, 0)
+| fields _time, moisture, lowerBound, upperBound, isOutlier

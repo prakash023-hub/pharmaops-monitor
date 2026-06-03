@@ -1,0 +1,3 @@
+index=pharma_manufacturing source="temperature_logs.csv" status="DEVIATION"
+| stats count by batch_id, equipment_id
+| sort -count

@@ -1,0 +1,9 @@
+index=pharma_manufacturing source="temperature_logs.csv"
+| eval _time=strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+| timechart span=1h avg(temperature_C) as temperature
+| streamstats window=50 current=true median(temperature) as median
+| eval absDev=(abs(temperature-median))
+| streamstats window=50 current=true median(absDev) as medianAbsDev
+| eval lowerBound=(median-medianAbsDev*3), upperBound=(median+medianAbsDev*3)
+| eval isOutlier=if(temperature < lowerBound OR temperature > upperBound, 1, 0)
+| fields _time, temperature, lowerBound, upperBound, isOutlier

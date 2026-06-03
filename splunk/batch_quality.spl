@@ -1,0 +1,3 @@
+index=pharma_manufacturing source="batch_summary.csv"
+| stats count by batch_status
+| rename batch_status as "Batch Status" count as "Count"
