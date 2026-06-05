@@ -16,13 +16,18 @@
     .badge.critical { background: #fee2e2; color: #b91c1c; }
     .badge.major { background: #ffedd5; color: #c2410c; }
     .badge.minor { background: #fef9c3; color: #a16207; }
-    .meta { background: #f8fafc; padding: 16px 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; border-bottom: 1px solid #e2e8f0; }
+    .meta { background: #f8fafc; padding: 16px 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; border-bottom: 1px solid #e2e8f0; }
     .meta dt { font-size: .75rem; color: #64748b; text-transform: uppercase; letter-spacing: .05em; }
-    .meta dd { font-weight: 600; margin-top: 2px; }
+    .meta dd { font-weight: 600; margin-top: 2px; font-size: .9rem; }
     .section { padding: 24px 32px; border-bottom: 1px solid #e2e8f0; }
-    .section h2 { font-size: 1rem; color: #1e3a5f; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .section h2 { font-size: 1rem; color: #1e3a5f; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .section h2::before { content: ''; width: 4px; height: 18px; background: #2d6a9f; border-radius: 2px; }
-    .section p, .section li { line-height: 1.7; color: #334155; font-size: .95rem; }
+    .content h3.section-title { font-size: .9rem; color: #475569; margin: 16px 0 8px; font-weight: 600; }
+    .content p { line-height: 1.75; color: #334155; font-size: .93rem; margin-bottom: 10px; }
+    .content ul { margin: 8px 0 12px 20px; }
+    .content li { line-height: 1.75; color: #334155; font-size: .93rem; margin-bottom: 6px; }
+    .content strong { color: #1e293b; }
+    .content code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: .85rem; }
     .footer { padding: 20px 32px; background: #f8fafc; font-size: .8rem; color: #64748b; text-align: center; }
     .agent-tag { display: inline-block; background: #dbeafe; color: #1d4ed8; padding: 4px 10px; border-radius: 6px; font-size: .75rem; font-weight: 600; }
   </style>
@@ -41,32 +46,32 @@
       <div><dt>Report ID</dt><dd>DEV-BATCH-1011-202606031929</dd></div>
       <div><dt>Batch ID</dt><dd>BATCH-1011</dd></div>
       <div><dt>Anomaly</dt><dd>Temperature Deviation (3.2σ)</dd></div>
+      <div><dt>Deviation Events</dt><dd>N/A</dd></div>
       <div><dt>Generated</dt><dd>2026-06-03 19:29:54</dd></div>
-      <div><dt>Financial Impact</dt><dd>₹15-30 lakhs</dd></div>
-      <div><dt>Confidence</dt><dd>4/5 (High)**</dd></div>
+      <div><dt>Financial Impact</dt><dd>₹(INR lakhs):</dd></div>
+      <div><dt>Confidence</dt><dd>4/5</dd></div>
     </dl>
     <div class="section">
       <h2>Root Cause Analysis</h2>
-      <p>**
-The primary root cause is a **failure in the data acquisition and monitoring system**, specifically a connectivity issue preventing SPLUNK MCP from retrieving critical process data.
-
-*   **Evidence:** The recurring error `{"error": "<urlopen error [Errno 61] Connection refused>"}` for all queried data points (Temp, Downtime, Batch) strongly indicates that SPLUNK MCP was unable to establish a network connection to its data sources (e.g., servers, PLCs, historians). `Errno 61: Connection refused` means that a server was actively refusing the connection request from the client.
-*   **Interpretation:** This is not a direct confirmation of a physical temperature deviation within Batch BATCH-1011, but rather a symptom of a systemic monitoring failure. The "temperature_deviation" anomaly likely triggered because the system either received no data (data starvation) or an error state, which was interpreted as a deviation, rather than a confirmed out-of-specification temperature reading from the batch itself. The monitoring system itself is compromised, leading to a loss of data visibility and control assurance.
-
-**</p>
+      <div class="content"><p>The primary root cause is a <strong>failure in the data acquisition and monitoring system</strong>, specifically a connectivity issue preventing SPLUNK MCP from retrieving critical process data.</p>
+<ul>
+<li><strong>Evidence:</strong> The recurring error <code>{&quot;error&quot;: &quot;&lt;urlopen error [Errno 61] Connection refused&gt;&quot;}</code> for all queried data points (Temp, Downtime, Batch) strongly indicates that SPLUNK MCP was unable to establish a network connection to its data sources (e.g., servers, PLCs, historians). <code>Errno 61: Connection refused</code> means that a server was actively refusing the connection request from the client.</li>
+<li><strong>Interpretation:</strong> This is not a direct confirmation of a physical temperature deviation within Batch BATCH-1011, but rather a symptom of a systemic monitoring failure. The &quot;temperature_deviation&quot; anomaly likely triggered because the system either received no data (data starvation) or an error state, which was interpreted as a deviation, rather than a confirmed out-of-specification temperature reading from the batch itself. The monitoring system itself is compromised, leading to a loss of data visibility and control assurance.</li>
+</ul></div>
     </div>
     <div class="section">
       <h2>Corrective &amp; Preventive Action (CAPA)</h2>
-      <p>**
-
-**Immediate Actions (C1):**
-1.  **Isolate Batch:** Immediately place BATCH-1011 on **Quarantine Hold** until the integrity of its storage/processing conditions can be fully verified.
-2.  **Manual Monitoring:** Implement immediate, temporary **manual temperature monitoring** of the batch and its environment using calibrated, independent temperature devices at defined intervals.
-3.  **IT/OT Emergency Response:** Engage IT and Operational Technology (OT) support immediately to investigate and resolve the `Connection refused` error for SPLUNK MCP. This includes checking network connectivity, server status, firewall rules, application logs of SPLUNK MCP, and logs of all relevant data source systems.</p>
-    </div>
-    <div class="section">
-      <h2>Full Agent Analysis</h2>
-      <p style="font-size:.88rem;">**PharmaOps Agent Report**<br><br>**Batch ID:** BATCH-1011<br>**Anomaly:** `temperature_deviation` (3.2 sigma)<br>**Time:** 2026-06-03T19:29:39.027047<br><br>---<br><br>**1. ROOT CAUSE (evidence-based):**<br>The primary root cause is a **failure in the data acquisition and monitoring system**, specifically a connectivity issue preventing SPLUNK MCP from retrieving critical process data.<br><br>*   **Evidence:** The recurring error `{"error": "<urlopen error [Errno 61] Connection refused>"}` for all queried data points (Temp, Downtime, Batch) strongly indicates that SPLUNK MCP was unable to establish a network connection to its data sources (e.g., servers, PLCs, historians). `Errno 61: Connection refused` means that a server was actively refusing the connection request from the client.<br>*   **Interpretation:** This is not a direct confirmation of a physical temperature deviation within Batch BATCH-1011, but rather a symptom of a systemic monitoring failure. The "temperature_deviation" anomaly likely triggered because the system either received no data (data starvation) or an error state, which was interpreted as a deviation, rather than a confirmed out-of-specification temperature reading from the batch itself. The monitoring system itself is compromised, leading to a loss of data visibility and control assurance.<br><br>**2. GMP IMPACT:**<br>**Major**<br><br>*   **Rationale:** The loss of automated temperature monitoring for a critical process parameter constitutes a significant breakdown in process control and data integrity. While a physical deviation in the batch is not confirmed, the inability to monitor, record, and assure that the batch was held within specified temperature ranges is a major GMP non-conformance. It prevents real-time intervention and retrospective verification of product quality attributes, directly impacting batch release decisions and potentially patient safety.<br><br>**3. CORRECTIVE ACTION (CAPA):**<br><br>**Immediate Actions (C1):**<br>1.  **Isolate Batch:** Immediately place BATCH-1011 on **Quarantine Hold** until the integrity of its storage/processing conditions can be fully verified.<br>2.  **Manual Monitoring:** Implement immediate, temporary **manual temperature monitoring** of the batch and its environment using calibrated, independent temperature devices at defined intervals.<br>3.  **IT/OT Emergency Response:** Engage IT and Operational Technology (OT) support immediately to investigate and resolve the `Connection refused` error for SPLUNK MCP. This includes checking network connectivity, server status, firewall rules, application logs of SPLUNK MCP, and logs of all relevant data source systems.<br>4.  **Restore Monitoring:** Prioritize restoring the automated temperature monitoring system to full operational status.<br><br>**Preventative Actions (A2):**<br>1.  **Root Cause Analysis (Systemic):** Conduct a thorough Root Cause Analysis (RCA) to determine *why* the connection was refused (e.g., unexpected server shutdown, resource exhaustion, network misconfiguration, security update conflict, software bug).<br>2.  **Monitoring System Health Checks:** Implement enhanced proactive monitoring and alerting for the health of critical monitoring systems themselves (e.g., network connectivity, service status, database availability), not just process parameter deviations.<br>3.  **Redundancy & Failover:** Evaluate and implement redundancy or failover mechanisms for critical data acquisition and monitoring components to prevent single points of failure.<br>4.  **SOP Review & Update:** Revise Standard Operating Procedures (SOPs) for handling monitoring system failures, including clear protocols for batch impact assessment, manual monitoring requirements, and escalation paths.<br>5.  **Training:** Provide refresher training to relevant personnel on updated SOPs and emergency response procedures for system anomalies.<br><br>**4. FINANCIAL IMPACT (INR lakhs):**<br>**15-30 lakhs** (Estimate)<br><br>*   **Investigation Costs:** IT/OT engineer time, QA investigator time, management oversight (2-5 lakhs).<br>*   **Manual Monitoring Costs:** Additional personnel required for manual checks over a period (0.5-1 lakh).<br>*   **Potential Batch Rework/Rejection Risk:** While not confirmed, the inability to demonstrate temperature control creates a significant risk. Assuming a typical batch value of 50-100 lakhs, a conservative 10-20% risk of rework, extended stability studies, or even partial rejection represents 5-20 lakhs.<br>*   **System Remediation/Upgrade:** Depending on the RCA, fixing the issue could involve software patches, hardware replacements, network reconfigurations, or minor system upgrades (5-10 lakhs).<br>*   **Production Delays/Downtime:** Potential delays in other batches if the issue affects shared infrastructure or requires system-wide validation (variable, but can be significant).<br><br>**5. CONFIDENCE SCORE:**<br>**4/5 (High)**<br><br>*   The evidence (repeated `Connection refused` errors) is highly specific and points directly to a monitoring system failure as the immediate root cause of the *anomaly detection*. The GMP impact is also clearly high due to the loss of critical process control visibility. The CAPA recommendations are standard industry practice for such events. The financial impact is an estimate and would require more specific company data (e.g., batch value, IT/OT cost structures) for higher precision.</p>
+      <div class="content"><p><strong>Immediate Actions (C1):</strong></p>
+<p class="numbered">1.  <strong>Isolate Batch:</strong> Immediately place BATCH-1011 on <strong>Quarantine Hold</strong> until the integrity of its storage/processing conditions can be fully verified.</p>
+<p class="numbered">2.  <strong>Manual Monitoring:</strong> Implement immediate, temporary <strong>manual temperature monitoring</strong> of the batch and its environment using calibrated, independent temperature devices at defined intervals.</p>
+<p class="numbered">3.  <strong>IT/OT Emergency Response:</strong> Engage IT and Operational Technology (OT) support immediately to investigate and resolve the <code>Connection refused</code> error for SPLUNK MCP. This includes checking network connectivity, server status, firewall rules, application logs of SPLUNK MCP, and logs of all relevant data source systems.</p>
+<p class="numbered">4.  <strong>Restore Monitoring:</strong> Prioritize restoring the automated temperature monitoring system to full operational status.</p>
+<p><strong>Preventative Actions (A2):</strong></p>
+<p class="numbered">1.  <strong>Root Cause Analysis (Systemic):</strong> Conduct a thorough Root Cause Analysis (RCA) to determine *why* the connection was refused (e.g., unexpected server shutdown, resource exhaustion, network misconfiguration, security update conflict, software bug).</p>
+<p class="numbered">2.  <strong>Monitoring System Health Checks:</strong> Implement enhanced proactive monitoring and alerting for the health of critical monitoring systems themselves (e.g., network connectivity, service status, database availability), not just process parameter deviations.</p>
+<p class="numbered">3.  <strong>Redundancy &amp; Failover:</strong> Evaluate and implement redundancy or failover mechanisms for critical data acquisition and monitoring components to prevent single points of failure.</p>
+<p class="numbered">4.  <strong>SOP Review &amp; Update:</strong> Revise Standard Operating Procedures (SOPs) for handling monitoring system failures, including clear protocols for batch impact assessment, manual monitoring requirements, and escalation paths.</p>
+<p class="numbered">5.  <strong>Training:</strong> Provide refresher training to relevant personnel on updated SOPs and emergency response procedures for system anomalies.</p></div>
     </div>
     <div class="footer">
       PharmaOps Monitor · Splunk Agentic Ops Hackathon 2026 · Observability Track<br>
