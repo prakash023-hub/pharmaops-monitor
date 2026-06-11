@@ -31,11 +31,15 @@ with st.sidebar:
     st.header("⚡ System Status")
     health = check_system()
     c1, c2 = st.columns(2)
-    c1.metric("MCP", "✅" if health.get("mcp") else "❌")
+    mcp_ok = health.get("mcp")
+    c1.metric("MCP", "✅" if mcp_ok else "⚠️")
     c2.metric("REST", "✅" if health.get("splunk_rest") else "❌")
     c1.metric("Data", "✅" if health.get("csv") else "❌")
     c2.metric("Gemini", "✅" if health.get("gemini") else "❌")
-    st.caption(f"Active: **{health.get('recommended', 'csv')}**")
+    active = health.get("recommended", "csv")
+    st.caption(f"Active data layer: **{active}**")
+    if not mcp_ok:
+        st.caption("MCP unavailable → REST fallback (live Splunk data)")
 
     st.divider()
     st.header("💰 Impact Calculator")
@@ -145,14 +149,25 @@ with tab3:
 
 # ── TAB 4: Chat ─────────────────────────────────────────────────────
 with tab4:
-    q = st.text_input("Plant Manager Question", placeholder="What batches failed?")
-    if st.button("Ask") and q and os.getenv("GEMINI_API_KEY"):
-        from mcp_chat_demo import chat
-        import io, contextlib
-        buf = io.StringIO()
-        with contextlib.redirect_stdout(buf):
-            chat(q)
-        st.markdown(buf.getvalue())
+    from mcp_chat_demo import ask
+
+    st.markdown("Ask in plain English — Gemini writes Splunk query, live data answers.")
+    q = st.text_input("Plant Manager Question", placeholder="What batches failed and why?")
+    if st.button("Ask", type="primary"):
+        if not os.getenv("GEMINI_API_KEY"):
+            st.error("Set GEMINI_API_KEY: export GEMINI_API_KEY=your_key then restart ./run_streamlit.sh")
+        elif q:
+            with st.spinner("Querying Splunk + Gemini..."):
+                try:
+                    result = ask(q, verbose=False)
+                    st.success(f"Source: **{result['source']}** | {len(result['rows'])} rows")
+                    st.markdown(f"**PharmaOps Agent:** {result['answer']}")
+                    with st.expander("SPL query used"):
+                        st.code(result["spl"], language="sql")
+                    if result["rows"]:
+                        st.dataframe(result["rows"][:10], use_container_width=True)
+                except Exception as exc:
+                    st.error(f"Error: {exc}")
 
 # ── TAB 5: Reports ──────────────────────────────────────────────────
 with tab5:

@@ -124,46 +124,89 @@ def _extract_mcp_rows(response: dict) -> list[dict]:
 
 
 def _infer_source(spl: str) -> str | None:
+    """Pick the best CSV for a query — avoid matching wrong file on join queries."""
+    spl_lower = spl.lower()
+    if any(k in spl_lower for k in ("batch_status", "batch_status=fail", "yield_pct", "oee_score", "failed")):
+        return "batch_summary.csv"
+    if "downtime" in spl_lower or "equipment_downtime" in spl_lower:
+        return "equipment_downtime.csv"
+    if "moisture" in spl_lower:
+        return "moisture_logs.csv"
+    if "temperature" in spl_lower or "deviation" in spl_lower:
+        return "temperature_logs.csv"
     for source in CSV_SOURCES:
-        if source in spl:
+        if source in spl_lower:
             return source
     return None
 
 
+def _csv_fail_batches() -> list[dict]:
+    """Answer: what batches failed and why."""
+    bs = pd.read_csv(CSV_SOURCES["batch_summary.csv"])
+    fails = bs[bs["batch_status"] == "FAIL"].copy()
+    if fails.empty:
+        return []
+
+    tl = pd.read_csv(CSV_SOURCES["temperature_logs.csv"])
+    dev = (
+        tl[tl["status"] == "DEVIATION"]
+        .groupby("batch_id", as_index=False)
+        .agg(deviation_count=("status", "count"), avg_temp=("temperature_C", "mean"))
+    )
+    out = fails.merge(dev, on="batch_id", how="left", suffixes=("", "_temp"))
+    out["reason"] = out.apply(
+        lambda r: (
+            f"{r.get('failure_mode', 'none')} — {int(r.get('deviation_count_temp', r.get('deviation_count', 0)))} temperature deviations"
+            if r.get("deviation_count_temp", 0) or r.get("deviation_count", 0)
+            else str(r.get("failure_mode", "quality review failed"))
+        ),
+        axis=1,
+    )
+    cols = ["batch_id", "product", "deviation_count", "batch_status", "yield_pct", "reason"]
+    return out[cols].head(20).to_dict(orient="records")
+
+
 def _csv_query(spl: str) -> list[dict]:
+    spl_lower = spl.lower()
+
+    if any(k in spl_lower for k in ("batch_status=fail", 'batch_status="fail"', "failed", "fail")):
+        if "batch_summary" in spl_lower or "fail" in spl_lower:
+            return _csv_fail_batches()
+
     source = _infer_source(spl)
     if not source or not CSV_SOURCES[source].exists():
+        if "fail" in spl_lower:
+            return _csv_fail_batches()
         if "DEVIATION" in spl.upper():
             return _local_detect_anomalies()
         return []
 
     df = pd.read_csv(CSV_SOURCES[source])
-    spl_lower = spl.lower()
 
-    if "batch_status=fail" in spl_lower or 'batch_status="fail"' in spl_lower:
-        return df[df["batch_status"] == "FAIL"].head(20).to_dict(orient="records")
+    if source == "batch_summary.csv" and "fail" in spl_lower:
+        if "batch_status" in df.columns:
+            return df[df["batch_status"] == "FAIL"].head(20).to_dict(orient="records")
 
-    if "status=deviation" in spl_lower:
-        if "stats count" in spl_lower or "deviation_count" in spl_lower:
-            group_cols = ["batch_id", "equipment_id"]
-            if "product" in df.columns:
-                group_cols.append("product")
-            agg = (
-                df[df["status"] == "DEVIATION"]
-                .groupby(group_cols, as_index=False)
-                .agg(
-                    deviation_count=("status", "count"),
-                    avg_temp=("temperature_C", "mean") if "temperature_C" in df.columns else ("status", "count"),
+    if "status=deviation" in spl_lower or "deviation" in spl_lower:
+        if "status" in df.columns:
+            if "stats count" in spl_lower or "deviation_count" in spl_lower:
+                group_cols = [c for c in ("batch_id", "equipment_id", "product") if c in df.columns]
+                agg = (
+                    df[df["status"] == "DEVIATION"]
+                    .groupby(group_cols, as_index=False)
+                    .agg(
+                        deviation_count=("status", "count"),
+                        **({"avg_temp": ("temperature_C", "mean")} if "temperature_C" in df.columns else {}),
+                    )
+                    .sort_values("deviation_count", ascending=False)
+                    .head(10)
                 )
-                .sort_values("deviation_count", ascending=False)
-                .head(10)
-            )
-            if "avg_temp" in agg.columns:
-                agg["avg_temp"] = agg["avg_temp"].round(2)
-            return agg.to_dict(orient="records")
-        return df[df["status"] == "DEVIATION"].head(20).to_dict(orient="records")
+                if "avg_temp" in agg.columns:
+                    agg["avg_temp"] = agg["avg_temp"].round(2)
+                return agg.to_dict(orient="records")
+            return df[df["status"] == "DEVIATION"].head(20).to_dict(orient="records")
 
-    if "downtime_minutes" in spl_lower and "stats" in spl_lower:
+    if "downtime" in spl_lower and "equipment_id" in df.columns:
         return (
             df.groupby("equipment_id", as_index=False)["downtime_minutes"]
             .sum()
@@ -173,10 +216,46 @@ def _csv_query(spl: str) -> list[dict]:
         )
 
     match = re.search(r'batch_id[=\\"]+([A-Z0-9-]+)', spl, re.I)
-    if match:
+    if match and "batch_id" in df.columns:
         return df[df["batch_id"] == match.group(1)].to_dict(orient="records")
 
     return df.head(10).to_dict(orient="records")
+
+
+# Known-good SPL templates (work with raw CSV ingest + rex)
+SPL_TEMPLATES = {
+    "failed_batches": (
+        f"search index={SPLUNK_INDEX} sourcetype=batch_summary.csv "
+        '| rex field=_raw "^(?<timestamp>[^,]+),(?<batch_id>[^,]+),(?<product>[^,]+),'
+        '(?<yield_pct>[^,]+),(?<deviation_count>[^,]+),(?<batch_status>[^,]+),(?<oee_score>[^,]+),(?<failure_mode>.*)" '
+        '| search batch_id=BATCH-* batch_status=FAIL '
+        "| table batch_id product deviation_count batch_status failure_mode | head 20"
+    ),
+    "deviations_by_batch": (
+        f"search index={SPLUNK_INDEX} sourcetype=temperature_logs.csv _raw=*DEVIATION* "
+        '| rex field=_raw "^(?<timestamp>[^,]+),(?<batch_id>[^,]+),(?<equipment_id>[^,]+),'
+        '(?<product>[^,]+),(?<temperature_C>[^,]+),(?<status>[^,]+)" '
+        "| search batch_id=BATCH-* | stats count by batch_id equipment_id | sort -count | head 10"
+    ),
+    "equipment_downtime": (
+        f"search index={SPLUNK_INDEX} sourcetype=equipment_downtime.csv "
+        '| rex field=_raw "^(?<timestamp>[^,]+),(?<equipment_id>[^,]+),(?<equipment_type>[^,]+),'
+        '(?<downtime_minutes>[^,]+),(?<reason>[^,]+),(?<severity>[^,]+)" '
+        "| search equipment_id=COAT-* OR equipment_id=GRAN-* OR equipment_id=COMPRESS-* "
+        "| stats sum(downtime_minutes) as total_downtime by equipment_id | sort -total_downtime"
+    ),
+}
+
+
+def _intent_spl(question: str) -> str | None:
+    q = question.lower()
+    if any(w in q for w in ("fail", "failed", "why")):
+        return SPL_TEMPLATES["failed_batches"]
+    if "downtime" in q or "equipment" in q:
+        return SPL_TEMPLATES["equipment_downtime"]
+    if "deviation" in q or "temperature" in q:
+        return SPL_TEMPLATES["deviations_by_batch"]
+    return None
 
 
 def _local_detect_anomalies() -> list[dict]:
@@ -226,30 +305,49 @@ def health_check() -> dict:
     return status
 
 
-def search(spl: str, earliest: str = "-30d", latest: str = "now") -> dict:
+def search(spl: str, earliest: str = "-30d", latest: str = "now", question: str = "") -> dict:
     """Query Splunk via MCP → REST → CSV. Returns clean rows for agents."""
     if not spl.strip().lower().startswith("search"):
         spl = f"search {spl}"
 
-    # 1. Try MCP
-    mcp_resp = _mcp_request(spl, earliest, latest)
-    rows = _extract_mcp_rows(mcp_resp)
-    if rows:
-        return {"source": "mcp", "rows": rows}
+    def _run(query: str) -> tuple[str | None, list[dict]]:
+        mcp_resp = _mcp_request(query, earliest, latest)
+        rows = _extract_mcp_rows(mcp_resp)
+        if rows:
+            return "mcp", rows
+        rest_resp = _rest_search(query, earliest="0", latest=latest)
+        rows = rest_resp.get("rows", [])
+        if rows:
+            return "splunk_rest", rows
+        return None, []
 
-    # 2. Try Splunk REST
-    rest_resp = _rest_search(spl, earliest="0", latest=latest)
-    rows = rest_resp.get("rows", [])
+    source, rows = _run(spl)
+    spl_used = spl
     if rows:
-        return {"source": "splunk_rest", "rows": rows}
+        return {"source": source, "rows": rows, "spl_used": spl_used}
 
-    # 3. CSV fallback
-    rows = _csv_query(spl)
+    if question:
+        template_spl = _intent_spl(question)
+        if template_spl and template_spl != spl:
+            source, rows = _run(template_spl)
+            if rows:
+                return {"source": source or "splunk_rest", "rows": rows, "spl_used": template_spl}
+
+    try:
+        rows = _csv_query(spl)
+        if not rows and question and "fail" in question.lower():
+            rows = _csv_fail_batches()
+        elif not rows and question:
+            rows = _csv_query(_intent_spl(question) or spl)
+    except Exception as exc:
+        rows = _csv_fail_batches() if "fail" in (question + spl).lower() else []
+        if not rows:
+            return {"source": "error", "rows": [], "error": str(exc), "spl_used": spl}
+
     if rows:
-        return {"source": "csv", "rows": rows}
+        return {"source": "csv", "rows": rows, "spl_used": spl_used}
 
-    err = mcp_resp.get("error") or rest_resp.get("error") or "No data"
-    return {"source": "error", "rows": [], "error": err}
+    return {"source": "error", "rows": [], "error": "No data returned", "spl_used": spl}
 
 
 def clean_evidence(evidence: dict) -> dict:
