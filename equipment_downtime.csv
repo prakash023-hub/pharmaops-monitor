@@ -1,24 +1,19 @@
-timestamp,equipment_id,downtime_minutes,reason,severity
-2026-01-03T00:00:00,COAT-01,218,Power failure,HIGH
-2026-03-17T08:00:00,COAT-01,76,Cleaning,MEDIUM
-2026-02-24T16:00:00,COAT-01,43,Scheduled maintenance,LOW
-2026-02-03T20:00:00,COAT-02,144,Cleaning,HIGH
-2026-01-16T01:00:00,COAT-02,208,Scheduled maintenance,HIGH
-2026-02-27T09:00:00,COAT-02,161,Scheduled maintenance,HIGH
-2026-02-28T10:00:00,COAT-02,75,Power failure,MEDIUM
-2026-03-22T17:00:00,GRAN-01,231,Power failure,HIGH
-2026-01-30T11:00:00,GRAN-01,91,Cleaning,MEDIUM
-2026-03-15T04:00:00,GRAN-01,197,Calibration,HIGH
-2026-03-08T07:00:00,GRAN-01,41,Cleaning,LOW
-2026-03-08T18:00:00,GRAN-01,64,Cleaning,MEDIUM
-2026-02-28T03:00:00,GRAN-01,52,Calibration,LOW
-2026-01-11T02:00:00,GRAN-02,30,Calibration,LOW
-2026-01-17T15:00:00,GRAN-02,69,Calibration,MEDIUM
-2026-01-10T11:00:00,GRAN-02,188,Power failure,HIGH
-2026-02-21T18:00:00,GRAN-02,158,Power failure,HIGH
-2026-02-20T08:00:00,GRAN-02,164,Calibration,HIGH
-2026-02-26T15:00:00,COMPRESS-01,202,Calibration,HIGH
-2026-01-21T04:00:00,COMPRESS-01,144,Mechanical failure,HIGH
-2026-03-04T14:00:00,COMPRESS-01,48,Power failure,LOW
-2026-03-09T03:00:00,COMPRESS-01,192,Mechanical failure,HIGH
-2026-02-28T15:00:00,COMPRESS-01,23,Mechanical failure,LOW
+timestamp,equipment_id,equipment_type,downtime_minutes,reason,severity
+2026-05-25T21:00:00,COAT-01,film_coating,92,Mechanical seal replacement,MEDIUM
+2026-05-27T05:00:00,COAT-01,film_coating,31,Scheduled preventive maintenance,LOW
+2026-05-17T06:00:00,COAT-02,film_coating,84,HVAC interlock trip,MEDIUM
+2026-06-06T18:00:00,COAT-02,film_coating,32,Mechanical seal replacement,LOW
+2026-06-04T04:00:00,COAT-02,film_coating,32,CIP cleaning cycle,LOW
+2026-06-10T16:00:00,COAT-02,film_coating,98,Power fluctuation recovery,MEDIUM
+2026-06-10T17:00:00,GRAN-01,wet_granulation,126,Thermostat calibration drift,HIGH
+2026-05-30T05:00:00,GRAN-01,wet_granulation,75,Scheduled preventive maintenance,MEDIUM
+2026-05-22T16:00:00,GRAN-01,wet_granulation,52,Mechanical seal replacement,LOW
+2026-06-10T01:00:00,GRAN-01,wet_granulation,150,Mechanical seal replacement,HIGH
+2026-05-27T08:00:00,GRAN-01,wet_granulation,115,Scheduled preventive maintenance,MEDIUM
+2026-05-15T16:00:00,GRAN-02,wet_granulation,38,Thermostat calibration drift,LOW
+2026-06-06T07:00:00,GRAN-02,wet_granulation,93,Mechanical seal replacement,MEDIUM
+2026-05-31T07:00:00,COMPRESS-01,tablet_compression,44,Power fluctuation recovery,LOW
+2026-05-19T19:00:00,COMPRESS-01,tablet_compression,102,Thermostat calibration drift,MEDIUM
+2026-05-23T14:00:00,COMPRESS-01,tablet_compression,103,CIP cleaning cycle,MEDIUM
+2026-05-17T04:00:00,COMPRESS-01,tablet_compression,92,CIP cleaning cycle,MEDIUM
+2026-06-03T19:00:00,COAT-02,film_coating,145,Thermostat calibration drift,HIGH

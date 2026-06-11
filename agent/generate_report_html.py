@@ -133,6 +133,48 @@ def render_html(report: dict) -> str:
     anomaly = report.get("anomaly_type", "temperature_deviation").replace("_", " ").title()
     sigma = report.get("deviation_sigma", "N/A")
     dev_count = report.get("deviation_count", "N/A")
+    impact = report.get("impact", {})
+    qa = report.get("agents", {}).get("qa_review", {})
+    if impact.get("display"):
+        parsed["financial_impact"] = impact["display"]
+    if qa.get("confidence_adjusted"):
+        parsed["confidence"] = str(qa["confidence_adjusted"])
+
+    agents_badge = ""
+    if report.get("agents"):
+        qa_dec = qa.get("qa_decision", "PENDING")
+        agents_badge = f'<span class="agent-tag">QA: {qa_dec}</span>'
+
+    ich_reg = report.get("ich_regulatory", {})
+    ich_risk = report.get("ich_risk", {})
+    ich_qa = qa.get("ich_compliance", {})
+
+    ich_html = ""
+    if ich_reg or ich_risk:
+        ich_items = "".join(
+            f"<li><strong>ICH {code}</strong>: {status}</li>"
+            for code, status in ich_qa.items()
+        ) if ich_qa else ""
+        ich_guidelines = "".join(
+            f'<li><strong>{g.get("guideline", "")}</strong> — {g.get("title", "")}<br>'
+            f'<span style="color:#64748b;font-size:0.85rem">{g.get("relevance", "")}</span></li>'
+            for g in ich_reg.get("ich_guidelines", [])
+        )
+        ich_html = f"""
+    <div class="section">
+      <h2>ICH Regulatory Compliance (Q7 / Q8 / Q9 / Q10)</h2>
+      <div class="content">
+        <p><strong>CQA Affected (ICH Q8):</strong> {ich_reg.get("cqa", "N/A")}</p>
+        <p><strong>ICH Q9 Risk Level:</strong> {ich_risk.get("risk_level", "N/A")}
+           (RPN={ich_risk.get("rpn", "N/A")} — {ich_risk.get("method", "")})</p>
+        <p>{ich_reg.get("risk_statement", "")}</p>
+        <h3 class="section-title">ICH QA Compliance Assessment</h3>
+        <ul>{ich_items}</ul>
+        <h3 class="section-title">Applicable ICH Guidelines</h3>
+        <ul>{ich_guidelines}</ul>
+        <p style="font-size:0.85rem;color:#64748b">Also: FDA 21 CFR Part 211 — {", ".join(qa.get("fda_citations", []))}</p>
+      </div>
+    </div>"""
 
     root_html = parsed["root_cause_html"] or parsed["full_html"]
     capa_html = parsed["capa_html"] or "<p>See full analysis below.</p>"
@@ -175,10 +217,11 @@ def render_html(report: dict) -> str:
   <div class="report">
     <div class="header">
       <h1>PharmaOps Monitor — GMP Deviation Report</h1>
-      <p>Autonomous investigation by Splunk MCP + Google Gemini</p>
+      <p>Autonomous investigation — Splunk MCP + Gemini | FDA 21 CFR + ICH Q7/Q8/Q9/Q10</p>
       <div class="badge-row">
         <span class="badge {badge}">GMP Impact: {parsed["gmp_impact"]}</span>
         <span class="agent-tag">AI-Generated CAPA</span>
+        {agents_badge}
       </div>
     </div>
     <dl class="meta">
@@ -194,8 +237,9 @@ def render_html(report: dict) -> str:
       <h2>Root Cause Analysis</h2>
       <div class="content">{root_html}</div>
     </div>
+    {ich_html}
     <div class="section">
-      <h2>Corrective &amp; Preventive Action (CAPA)</h2>
+      <h2>Corrective &amp; Preventive Action (CAPA per ICH Q10)</h2>
       <div class="content">{capa_html}</div>
     </div>
     <div class="footer">

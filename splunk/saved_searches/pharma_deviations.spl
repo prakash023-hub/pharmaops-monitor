@@ -1,0 +1,1 @@
+index=pharma_manufacturing sourcetype=temperature_logs.csv _raw=*DEVIATION* | rex field=_raw "BATCH-(?<batch_num>\d+)" | stats count by batch_num | rename batch_num AS batch | eval batch_id="BATCH-".batch | fields batch_id count | sort -count

@@ -1,32 +1,38 @@
 #!/bin/bash
-# PharmaOps Monitor — Grand Prize demo runner
+# PharmaOps Monitor — Grand Prize demo (multi-agent)
 set -e
 cd "$(dirname "$0")"
-
-if [ -d ".venv" ]; then
-  source .venv/bin/activate
-fi
+[ -d ".venv" ] && source .venv/bin/activate
 
 if [ -z "$GEMINI_API_KEY" ]; then
-  echo "ERROR: Set GEMINI_API_KEY first:"
-  echo "  export GEMINI_API_KEY=your_key"
+  echo "ERROR: export GEMINI_API_KEY=your_key"
   exit 1
 fi
 
 echo "============================================"
-echo "  PharmaOps Monitor — Grand Prize Demo"
+echo "  PharmaOps Monitor — MULTI-AGENT DEMO"
+echo "  Detection → Investigation → QA Review"
 echo "============================================"
 
 echo ""
-echo "[1/3] Autonomous GMP Investigator..."
-python3 agent/pharma_agent.py --autonomous --open-report
+echo "[0] Health check..."
+python3 agent/pharma_agent.py --health
 
 echo ""
-echo "[2/3] Natural Language Chat (4 demo questions)..."
+echo "[1] Multi-agent pipeline..."
+python3 agent/pharma_agent.py --multi-agent --open-report
+
+echo ""
+echo "[2] Watchdog (auto-trigger simulation)..."
+python3 agent/watchdog.py --once
+
+echo ""
+echo "[3] Natural language chat..."
 python3 agent/mcp_chat_demo.py
 
 echo ""
-echo "[3/3] Demo complete!"
+echo "[4] Launch web UI:"
+echo "    streamlit run app/streamlit_app.py"
+echo ""
 echo "  Reports: agent/reports/"
-echo "  Video script: docs/GRAND_PRIZE_VIDEO_SCRIPT.md"
-echo "  Devpost copy: docs/DEVPOST_SUBMISSION.md"
+echo "  Alerts:  agent/reports/alerts.jsonl"

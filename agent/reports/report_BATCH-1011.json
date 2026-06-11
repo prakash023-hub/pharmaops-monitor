@@ -1,8 +1,727 @@
 {
-  "report_id": "DEV-BATCH-1011-202606031929",
+  "report_id": "DEV-BATCH-1011-202606111050",
   "batch_id": "BATCH-1011",
   "anomaly_type": "temperature_deviation",
-  "deviation_sigma": 3.2,
-  "timestamp": "2026-06-03T19:29:54.894971",
-  "agent_analysis": "**PharmaOps Agent Report**\n\n**Batch ID:** BATCH-1011\n**Anomaly:** `temperature_deviation` (3.2 sigma)\n**Time:** 2026-06-03T19:29:39.027047\n\n---\n\n**1. ROOT CAUSE (evidence-based):**\nThe primary root cause is a **failure in the data acquisition and monitoring system**, specifically a connectivity issue preventing SPLUNK MCP from retrieving critical process data.\n\n*   **Evidence:** The recurring error `{\"error\": \"<urlopen error [Errno 61] Connection refused>\"}` for all queried data points (Temp, Downtime, Batch) strongly indicates that SPLUNK MCP was unable to establish a network connection to its data sources (e.g., servers, PLCs, historians). `Errno 61: Connection refused` means that a server was actively refusing the connection request from the client.\n*   **Interpretation:** This is not a direct confirmation of a physical temperature deviation within Batch BATCH-1011, but rather a symptom of a systemic monitoring failure. The \"temperature_deviation\" anomaly likely triggered because the system either received no data (data starvation) or an error state, which was interpreted as a deviation, rather than a confirmed out-of-specification temperature reading from the batch itself. The monitoring system itself is compromised, leading to a loss of data visibility and control assurance.\n\n**2. GMP IMPACT:**\n**Major**\n\n*   **Rationale:** The loss of automated temperature monitoring for a critical process parameter constitutes a significant breakdown in process control and data integrity. While a physical deviation in the batch is not confirmed, the inability to monitor, record, and assure that the batch was held within specified temperature ranges is a major GMP non-conformance. It prevents real-time intervention and retrospective verification of product quality attributes, directly impacting batch release decisions and potentially patient safety.\n\n**3. CORRECTIVE ACTION (CAPA):**\n\n**Immediate Actions (C1):**\n1.  **Isolate Batch:** Immediately place BATCH-1011 on **Quarantine Hold** until the integrity of its storage/processing conditions can be fully verified.\n2.  **Manual Monitoring:** Implement immediate, temporary **manual temperature monitoring** of the batch and its environment using calibrated, independent temperature devices at defined intervals.\n3.  **IT/OT Emergency Response:** Engage IT and Operational Technology (OT) support immediately to investigate and resolve the `Connection refused` error for SPLUNK MCP. This includes checking network connectivity, server status, firewall rules, application logs of SPLUNK MCP, and logs of all relevant data source systems.\n4.  **Restore Monitoring:** Prioritize restoring the automated temperature monitoring system to full operational status.\n\n**Preventative Actions (A2):**\n1.  **Root Cause Analysis (Systemic):** Conduct a thorough Root Cause Analysis (RCA) to determine *why* the connection was refused (e.g., unexpected server shutdown, resource exhaustion, network misconfiguration, security update conflict, software bug).\n2.  **Monitoring System Health Checks:** Implement enhanced proactive monitoring and alerting for the health of critical monitoring systems themselves (e.g., network connectivity, service status, database availability), not just process parameter deviations.\n3.  **Redundancy & Failover:** Evaluate and implement redundancy or failover mechanisms for critical data acquisition and monitoring components to prevent single points of failure.\n4.  **SOP Review & Update:** Revise Standard Operating Procedures (SOPs) for handling monitoring system failures, including clear protocols for batch impact assessment, manual monitoring requirements, and escalation paths.\n5.  **Training:** Provide refresher training to relevant personnel on updated SOPs and emergency response procedures for system anomalies.\n\n**4. FINANCIAL IMPACT (INR lakhs):**\n**15-30 lakhs** (Estimate)\n\n*   **Investigation Costs:** IT/OT engineer time, QA investigator time, management oversight (2-5 lakhs).\n*   **Manual Monitoring Costs:** Additional personnel required for manual checks over a period (0.5-1 lakh).\n*   **Potential Batch Rework/Rejection Risk:** While not confirmed, the inability to demonstrate temperature control creates a significant risk. Assuming a typical batch value of 50-100 lakhs, a conservative 10-20% risk of rework, extended stability studies, or even partial rejection represents 5-20 lakhs.\n*   **System Remediation/Upgrade:** Depending on the RCA, fixing the issue could involve software patches, hardware replacements, network reconfigurations, or minor system upgrades (5-10 lakhs).\n*   **Production Delays/Downtime:** Potential delays in other batches if the issue affects shared infrastructure or requires system-wide validation (variable, but can be significant).\n\n**5. CONFIDENCE SCORE:**\n**4/5 (High)**\n\n*   The evidence (repeated `Connection refused` errors) is highly specific and points directly to a monitoring system failure as the immediate root cause of the *anomaly detection*. The GMP impact is also clearly high due to the loss of critical process control visibility. The CAPA recommendations are standard industry practice for such events. The financial impact is an estimate and would require more specific company data (e.g., batch value, IT/OT cost structures) for higher precision."
+  "deviation_sigma": 2.0,
+  "deviation_count": 6,
+  "detection_source": "splunk_rest",
+  "timestamp": "2026-06-11T10:50:56.336842",
+  "agents": {
+    "detection": {
+      "agent": "detection",
+      "batch_id": "BATCH-1011",
+      "product": "Metformin_500mg",
+      "equipment_id": "COAT-02",
+      "anomaly_type": "temperature_deviation",
+      "deviation_count": 6,
+      "deviation_sigma": 2.0,
+      "detection_source": "splunk_rest",
+      "failure_mode": "coating_thermostat_drift",
+      "moisture_deviations": 2,
+      "priority": "MEDIUM",
+      "top_anomalies": [
+        {
+          "batch_id": "BATCH-1011",
+          "equipment_id": "COAT-02",
+          "product": "Metformin_500mg",
+          "deviation_count": "6",
+          "avg_temp": "45.10999999999999",
+          "max_temp": "49.72"
+        },
+        {
+          "batch_id": "BATCH-1027",
+          "equipment_id": "COAT-01",
+          "product": "Atorvastatin_10mg",
+          "deviation_count": "6",
+          "avg_temp": "44.60833333333333",
+          "max_temp": "48.80"
+        },
+        {
+          "batch_id": "BATCH-1049",
+          "equipment_id": "COAT-02",
+          "product": "Atorvastatin_10mg",
+          "deviation_count": "6",
+          "avg_temp": "46.21666666666667",
+          "max_temp": "48.59"
+        }
+      ],
+      "ich_regulatory": {
+        "anomaly_type": "temperature_deviation",
+        "failure_mode": "coating_thermostat_drift",
+        "cqa": "Equipment temperature control system",
+        "risk_statement": "Thermostat drift indicates loss of process control \u2014 ICH Q10 CAPA and ICH Q9 risk reassessment required.",
+        "ich_guidelines": [
+          {
+            "guideline": "Q7",
+            "title": "GMP for Active Pharmaceutical Ingredients",
+            "relevance": "Manufacturing process controls, deviation handling, batch records.",
+            "sections": [
+              "Section 8: Production and In-Process Controls",
+              "Section 10: Storage and Distribution",
+              "Section 13: Change Control",
+              "Section 14: Rejection and Reuse of Materials"
+            ]
+          },
+          {
+            "guideline": "Q9(R1)",
+            "title": "Quality Risk Management",
+            "relevance": "Risk assessment for deviation impact on patient safety and product quality.",
+            "sections": [
+              "Section 4.3 Risk Assessment",
+              "Section 4.4 Risk Control",
+              "Section 4.5 Risk Communication",
+              "Section 4.6 Risk Review"
+            ]
+          },
+          {
+            "guideline": "Q10",
+            "title": "Pharmaceutical Quality System",
+            "relevance": "CAPA system, change management, management review of deviations.",
+            "sections": [
+              "Section 3.2.1 Process Performance and Product Quality Monitoring",
+              "Section 3.2.2 CAPA System",
+              "Section 3.2.3 Change Management System",
+              "Section 3.3 Management Review"
+            ]
+          },
+          {
+            "guideline": "Q1A(R2)",
+            "title": "Stability Testing of New Drug Substances and Products",
+            "relevance": "Temperature excursions affect shelf-life and stability data integrity.",
+            "sections": [
+              "2.1.1 General",
+              "2.2.2 Storage Conditions"
+            ]
+          }
+        ],
+        "fda_citations": [
+          {
+            "section": "211.68",
+            "requirement": "Automatic, mechanical, and electronic equipment \u2014 calibration"
+          },
+          {
+            "section": "211.100",
+            "requirement": "Written procedures; deviations must be recorded and justified"
+          },
+          {
+            "section": "211.192",
+            "requirement": "Production record review \u2014 investigation of unexplained discrepancies"
+          },
+          {
+            "section": "211.67",
+            "requirement": "Equipment cleaning and maintenance"
+          }
+        ],
+        "regulatory_summary": "This deviation affects Equipment temperature control system. Applicable: Q7, Q9(R1), Q10, Q1A(R2) + FDA 21 CFR \u00a7211.68, \u00a7211.100, \u00a7211.192, \u00a7211.67."
+      },
+      "cqa_affected": "Equipment temperature control system"
+    },
+    "investigation": {
+      "agent": "investigation",
+      "batch_id": "BATCH-1011",
+      "analysis": {
+        "root_cause": "The root cause is identified as coating_thermostat_drift on equipment_id COAT-02, leading to significant temperature_deviations for BATCH-1011 (Metformin_500mg). Splunk evidence from 2026-01-06 for COAT-02 shows 6 instances of temperature deviations, with readings ranging from a minimum of 36.21\u00b0C to a maximum of 49.72\u00b0C. These fluctuations indicate a loss of temperature control within the coating equipment, directly supporting the detected anomaly and failure mode.",
+        "gmp_impact": "Major",
+        "gmp_justification": "Per ICH Q9(R1) Section 4.3 (Risk Assessment) and Section 4.4 (Risk Control), loss of process control, particularly temperature, constitutes a significant risk to product quality and patient safety. Thermostat drift indicates a failure in maintaining validated process parameters, directly impacting Critical Quality Attributes (CQAs) of the drug product such as dissolution, stability, and API degradation. This non-conformance requires investigation and corrective action as per FDA 21 CFR \u00a7211.192. Failure to maintain calibrated equipment (FDA 21 CFR \u00a7211.68) and record deviations (FDA 21 CFR \u00a7211.100) are also major GMP non-compliances. The 'batch_qc' evidence, showing a 'FAIL' status for a BATCH-1011 (though for a different product), reinforces the potential for product quality issues arising from such deviations.",
+        "ich_guidelines_applied": [
+          "Q7",
+          "Q9(R1)",
+          "Q10",
+          "Q1A(R2)"
+        ],
+        "ich_sections_cited": [
+          "Q9(R1): Section 4.3 Risk Assessment",
+          "Q9(R1): Section 4.4 Risk Control",
+          "Q10: Section 3.2.1 Process Performance and Product Quality Monitoring",
+          "Q10: Section 3.2.2 CAPA System",
+          "Q7: Section 8: Production and In-Process Controls",
+          "Q1A(R2): Section 2.2.2 Storage Conditions"
+        ],
+        "cqa_impact": "The critical quality attribute affected is the Equipment temperature control system. This directly impacts critical product attributes such as drug dissolution profile, coating uniformity and integrity, and the chemical stability of the drug product and API during the coating process.",
+        "immediate_capa": [
+          "Initiate a formal investigation into the temperature deviations of COAT-02 for BATCH-1011 (Metformin_500mg) and all other batches processed on COAT-02 during the period of deviation, including a thorough review of production records (ICH Q10, 3.2.1; FDA 21 CFR 211.192).",
+          "Immediately quarantine BATCH-1011 (Metformin_500mg) and any other affected batches identified through the investigation. Conduct a comprehensive quality evaluation, including testing for dissolution, assay, and impurities (ICH Q7, 8; ICH Q9, 4.4).",
+          "Remove COAT-02 from service immediately until the thermostat drift is identified, repaired, and the equipment is recalibrated and requalified according to established procedures (ICH Q7, 8; FDA 21 CFR 211.68).",
+          "Perform an immediate diagnostic troubleshooting and calibration verification of the thermostat and temperature control system for COAT-02 to identify the specific cause of the drift (FDA 21 CFR 211.68)."
+        ],
+        "preventive_capa": [
+          "Implement an enhanced preventative maintenance and calibration schedule for the thermostats and temperature control systems on all coating equipment (COAT-02 and COAT-01, given recurring anomalies) to prevent future drift (ICH Q10, 3.2.2; FDA 21 CFR 211.67).",
+          "Evaluate and upgrade the temperature monitoring system on coating equipment to incorporate tighter deviation alarm limits, increased sampling frequency, and predictive analytics for early detection of potential thermostat drift (ICH Q10, 3.2.1).",
+          "Conduct a review and update of standard operating procedures (SOPs) for coating equipment setup, operation, and in-process temperature monitoring, followed by retraining of relevant personnel to ensure adherence to validated parameters and prompt response to deviations (ICH Q10, 3.2.2; FDA 21 CFR 211.100).",
+          "Perform a comprehensive risk assessment (ICH Q9, 4.3) across all critical processing equipment and parameters within the facility to identify and mitigate systemic vulnerabilities contributing to process control issues."
+        ],
+        "confidence": 4.5,
+        "confidence_reason": "High confidence due to strong alignment between the detection alert's anomaly type ('temperature_deviation'), failure mode ('coating_thermostat_drift'), and equipment ID ('COAT-02') with the detailed Splunk evidence. The Splunk data clearly shows 6 distinct temperature deviations on COAT-02, matching the alert's count, and presents a wide range of temperatures (36.21\u00b0C to 49.72\u00b0C) consistent with thermostat drift. The only minor discrepancy is the product listed for BATCH-1011 in the 'batch_qc' evidence (Atorvastatin_10mg) versus the alert (Metformin_500mg), which does not undermine the core finding of significant temperature deviations on COAT-02."
+      },
+      "impact": {
+        "product": "Metformin_500mg",
+        "batch_value_lakhs": 80,
+        "gmp_impact": "Major",
+        "batch_risk_lakhs": 14.4,
+        "investigation_lakhs": 8,
+        "rework_lakhs": 16.8,
+        "downtime_lakhs": 6.0,
+        "total_min_lakhs": 13.8,
+        "total_max_lakhs": 45.2,
+        "display": "13.8-45.2 lakhs",
+        "prevented_if_caught_early_lakhs": 31.6
+      },
+      "ich_risk": {
+        "severity": 3,
+        "occurrence": 2,
+        "detectability": 1,
+        "rpn": 6,
+        "risk_level": "LOW",
+        "method": "ICH Q9(R1) Risk Priority Number (RPN)",
+        "recommendation": "Standard deviation investigation per ICH Q7 Section 14"
+      },
+      "ich_regulatory": {
+        "anomaly_type": "temperature_deviation",
+        "failure_mode": "coating_thermostat_drift",
+        "cqa": "Equipment temperature control system",
+        "risk_statement": "Thermostat drift indicates loss of process control \u2014 ICH Q10 CAPA and ICH Q9 risk reassessment required.",
+        "ich_guidelines": [
+          {
+            "guideline": "Q7",
+            "title": "GMP for Active Pharmaceutical Ingredients",
+            "relevance": "Manufacturing process controls, deviation handling, batch records.",
+            "sections": [
+              "Section 8: Production and In-Process Controls",
+              "Section 10: Storage and Distribution",
+              "Section 13: Change Control",
+              "Section 14: Rejection and Reuse of Materials"
+            ]
+          },
+          {
+            "guideline": "Q9(R1)",
+            "title": "Quality Risk Management",
+            "relevance": "Risk assessment for deviation impact on patient safety and product quality.",
+            "sections": [
+              "Section 4.3 Risk Assessment",
+              "Section 4.4 Risk Control",
+              "Section 4.5 Risk Communication",
+              "Section 4.6 Risk Review"
+            ]
+          },
+          {
+            "guideline": "Q10",
+            "title": "Pharmaceutical Quality System",
+            "relevance": "CAPA system, change management, management review of deviations.",
+            "sections": [
+              "Section 3.2.1 Process Performance and Product Quality Monitoring",
+              "Section 3.2.2 CAPA System",
+              "Section 3.2.3 Change Management System",
+              "Section 3.3 Management Review"
+            ]
+          },
+          {
+            "guideline": "Q1A(R2)",
+            "title": "Stability Testing of New Drug Substances and Products",
+            "relevance": "Temperature excursions affect shelf-life and stability data integrity.",
+            "sections": [
+              "2.1.1 General",
+              "2.2.2 Storage Conditions"
+            ]
+          }
+        ],
+        "fda_citations": [
+          {
+            "section": "211.68",
+            "requirement": "Automatic, mechanical, and electronic equipment \u2014 calibration"
+          },
+          {
+            "section": "211.100",
+            "requirement": "Written procedures; deviations must be recorded and justified"
+          },
+          {
+            "section": "211.192",
+            "requirement": "Production record review \u2014 investigation of unexplained discrepancies"
+          },
+          {
+            "section": "211.67",
+            "requirement": "Equipment cleaning and maintenance"
+          }
+        ],
+        "regulatory_summary": "This deviation affects Equipment temperature control system. Applicable: Q7, Q9(R1), Q10, Q1A(R2) + FDA 21 CFR \u00a7211.68, \u00a7211.100, \u00a7211.192, \u00a7211.67."
+      },
+      "detection_source": "splunk_rest"
+    },
+    "qa_review": {
+      "approved": true,
+      "qa_decision": "RELEASE_FOR_CAPA",
+      "compliance_gaps": [
+        "ICH Q9 Risk Assessment: The assigned RPN of 6 and 'LOW' risk level are inconsistent with the 'Major' GMP impact stated and the potential impact on CQAs (dissolution, stability, API degradation). Severity (assigned 3) appears underestimated given the 'significant risk to product quality and patient safety' and direct impact on CQAs. Occurrence (assigned 2) also seems underestimated given '6 instances of temperature deviations' and 'recurring anomalies'. A revised assessment is required to accurately reflect the risk.",
+        "ICH Q8 CQA Identification: The investigation incorrectly identifies 'Equipment temperature control system' as a Critical Quality Attribute (CQA). While the control system is critical for maintaining process parameters, CQAs are inherent properties of the product (e.g., dissolution, coating uniformity, stability, API degradation), which were correctly identified as being *impacted* by the deviation, but not the CQA itself.",
+        "Batch Identification Discrepancy: The 'confidence_reason' notes a discrepancy where 'batch_qc' evidence refers to BATCH-1011 as Atorvastatin_10mg, while the alert and investigation refer to Metformin_500mg for BATCH-1011. This must be clarified and reconciled to ensure the correct batch is investigated, quarantined, and tested.",
+        "ICH Q1A(R2) Relevance: The citation of ICH Q1A(R2) Section 2.2.2 (Storage Conditions) for an in-process manufacturing deviation is not directly applicable. While temperature excursions impact product stability, Q1A(R2) primarily addresses stability testing protocols for new drug substances and products, not in-process manufacturing controls or deviations thereof. Its inclusion here appears to be a misapplication of the guideline."
+      ],
+      "fda_citations": [
+        "21 CFR 211.68",
+        "21 CFR 211.100",
+        "21 CFR 211.192",
+        "21 CFR 211.67"
+      ],
+      "ich_compliance": {
+        "Q7": "Compliant: The investigation aligns with Q7 principles for production and in-process controls, deviation handling, and disposition of affected materials (e.g., quarantine, equipment removal, testing).",
+        "Q8": "Gap: The CQA itself is misidentified as 'Equipment temperature control system' rather than the product attributes it impacts (e.g., dissolution, stability).",
+        "Q9": "Gap: The risk assessment (RPN, severity, occurrence, and overall risk level) is inconsistent with the stated GMP impact and potential CQA impact, leading to an undervaluation of the risk. Needs re-evaluation.",
+        "Q10": "Compliant: The proposed immediate and preventive CAPAs align well with Q10 principles for Process Performance and Product Quality Monitoring (3.2.1) and the CAPA System (3.2.2)."
+      },
+      "ich_citations": [
+        "ICH Q9(R1) Section 4.3 Risk Assessment",
+        "ICH Q9(R1) Section 4.4 Risk Control",
+        "ICH Q10 Section 3.2.1 Process Performance and Product Quality Monitoring",
+        "ICH Q10 Section 3.2.2 CAPA System",
+        "ICH Q7 Section 8 Production and In-Process Controls"
+      ],
+      "qa_recommendation": "The investigation is well-structured and proposes appropriate immediate and preventive CAPAs to address the identified root cause. Therefore, the investigation is approved to proceed with immediate CAPA implementation. However, the compliance gaps identified (inaccurate ICH Q9 risk assessment, incorrect CQA identification per ICH Q8 principles, critical batch ID discrepancy, and misapplication of ICH Q1A(R2)) must be addressed and documented before final batch disposition and full CAPA closure. Specifically, a revised ICH Q9 risk assessment with appropriate severity and occurrence ratings, a corrected CQA definition, and clarification of the BATCH-1011 product are required to ensure full compliance and accurate risk representation per FDA 21 CFR Part 211.192 and ICH Q9(R1).",
+      "confidence_adjusted": 4.5
+    }
+  },
+  "impact": {
+    "product": "Metformin_500mg",
+    "batch_value_lakhs": 80,
+    "gmp_impact": "Major",
+    "batch_risk_lakhs": 14.4,
+    "investigation_lakhs": 8,
+    "rework_lakhs": 16.8,
+    "downtime_lakhs": 6.0,
+    "total_min_lakhs": 13.8,
+    "total_max_lakhs": 45.2,
+    "display": "13.8-45.2 lakhs",
+    "prevented_if_caught_early_lakhs": 31.6
+  },
+  "ich_risk": {
+    "severity": 3,
+    "occurrence": 2,
+    "detectability": 1,
+    "rpn": 6,
+    "risk_level": "LOW",
+    "method": "ICH Q9(R1) Risk Priority Number (RPN)",
+    "recommendation": "Standard deviation investigation per ICH Q7 Section 14"
+  },
+  "ich_regulatory": {
+    "anomaly_type": "temperature_deviation",
+    "failure_mode": "coating_thermostat_drift",
+    "cqa": "Equipment temperature control system",
+    "risk_statement": "Thermostat drift indicates loss of process control \u2014 ICH Q10 CAPA and ICH Q9 risk reassessment required.",
+    "ich_guidelines": [
+      {
+        "guideline": "Q7",
+        "title": "GMP for Active Pharmaceutical Ingredients",
+        "relevance": "Manufacturing process controls, deviation handling, batch records.",
+        "sections": [
+          "Section 8: Production and In-Process Controls",
+          "Section 10: Storage and Distribution",
+          "Section 13: Change Control",
+          "Section 14: Rejection and Reuse of Materials"
+        ]
+      },
+      {
+        "guideline": "Q9(R1)",
+        "title": "Quality Risk Management",
+        "relevance": "Risk assessment for deviation impact on patient safety and product quality.",
+        "sections": [
+          "Section 4.3 Risk Assessment",
+          "Section 4.4 Risk Control",
+          "Section 4.5 Risk Communication",
+          "Section 4.6 Risk Review"
+        ]
+      },
+      {
+        "guideline": "Q10",
+        "title": "Pharmaceutical Quality System",
+        "relevance": "CAPA system, change management, management review of deviations.",
+        "sections": [
+          "Section 3.2.1 Process Performance and Product Quality Monitoring",
+          "Section 3.2.2 CAPA System",
+          "Section 3.2.3 Change Management System",
+          "Section 3.3 Management Review"
+        ]
+      },
+      {
+        "guideline": "Q1A(R2)",
+        "title": "Stability Testing of New Drug Substances and Products",
+        "relevance": "Temperature excursions affect shelf-life and stability data integrity.",
+        "sections": [
+          "2.1.1 General",
+          "2.2.2 Storage Conditions"
+        ]
+      }
+    ],
+    "fda_citations": [
+      {
+        "section": "211.68",
+        "requirement": "Automatic, mechanical, and electronic equipment \u2014 calibration"
+      },
+      {
+        "section": "211.100",
+        "requirement": "Written procedures; deviations must be recorded and justified"
+      },
+      {
+        "section": "211.192",
+        "requirement": "Production record review \u2014 investigation of unexplained discrepancies"
+      },
+      {
+        "section": "211.67",
+        "requirement": "Equipment cleaning and maintenance"
+      }
+    ],
+    "regulatory_summary": "This deviation affects Equipment temperature control system. Applicable: Q7, Q9(R1), Q10, Q1A(R2) + FDA 21 CFR \u00a7211.68, \u00a7211.100, \u00a7211.192, \u00a7211.67."
+  },
+  "gmp_score": {
+    "gmp_score": 81.0,
+    "gmp_grade": "B \u2014 Minor Gaps",
+    "pillar_scores": {
+      "documentation": 100,
+      "process_control": 91.0,
+      "deviation_management": 94,
+      "equipment_qualification": 80,
+      "quality_oversight": 75,
+      "batch_release": 0
+    },
+    "gmp_gaps": [
+      "batch_release: 0/100 \u2014 21 CFR 211.165 \u2014 Testing and release for distribution"
+    ],
+    "gmp_status": "AT_RISK",
+    "framework": "WHO GMP + EU GMP Annex 1 + FDA 21 CFR Part 211"
+  },
+  "qms_risk": {
+    "qms_risk_score": 20.9,
+    "qms_risk_level": "LOW",
+    "qms_action_required": "Document and close. No batch impact expected.",
+    "dimension_risks": {
+      "process_performance": 26.2,
+      "capa_effectiveness": 7.2,
+      "change_control": 35,
+      "supplier_quality": 20,
+      "data_integrity": 10,
+      "management_oversight": 27.6
+    },
+    "dimensions": {
+      "process_performance": {
+        "weight": 0.25,
+        "ich": "ICH Q10 \u00a73.2.1 \u2014 Process Performance and Product Quality Monitoring",
+        "description": "Ability to maintain CPPs within validated ranges"
+      },
+      "capa_effectiveness": {
+        "weight": 0.2,
+        "ich": "ICH Q10 \u00a73.2.2 \u2014 CAPA System",
+        "description": "Corrective and preventive action adequacy"
+      },
+      "change_control": {
+        "weight": 0.15,
+        "ich": "ICH Q10 \u00a73.2.3 \u2014 Change Management",
+        "description": "Controlled change management for process/equipment"
+      },
+      "supplier_quality": {
+        "weight": 0.1,
+        "ich": "ICH Q10 \u00a72.7 \u2014 Materials Management",
+        "description": "Raw material and supplier quality oversight"
+      },
+      "data_integrity": {
+        "weight": 0.15,
+        "ich": "ICH Q10 + ALCOA+ principles",
+        "description": "Attributable, Legible, Contemporaneous, Original, Accurate data"
+      },
+      "management_oversight": {
+        "weight": 0.15,
+        "ich": "ICH Q10 \u00a73.3 \u2014 Management Review",
+        "description": "Senior management review of quality metrics"
+      }
+    },
+    "ich_framework": "ICH Q10 Pharmaceutical Quality System",
+    "trend": "STABLE",
+    "ai_mitigation": "AI early detection reduced QMS risk by ~40% vs manual monitoring"
+  },
+  "pv_assessment": {
+    "pv_risk_score": 93.6,
+    "pv_risk_level": "CRITICAL",
+    "pv_action": "Report to PV team immediately",
+    "patient_safety_risk": "Modified drug release profile \u2014 bioavailability change for extended-release products",
+    "therapeutic_class": "Antidiabetic",
+    "pv_reportable": false,
+    "ich_pv_reference": "ICH E2E + ICH Q8 CQA \u2014 dissolution/release profile",
+    "who_pv_reference": "WHO \u2014 Process validation requirements",
+    "pv_notification_required": true,
+    "regulatory_reporting": "Internal QA documentation only"
+  },
+  "regulatory_scores": {
+    "batch_id": "BATCH-1011",
+    "product": "Metformin_500mg",
+    "timestamp": "2026-06-11T10:50:56.335866",
+    "gmp": {
+      "gmp_score": 81.0,
+      "gmp_grade": "B \u2014 Minor Gaps",
+      "pillar_scores": {
+        "documentation": 100,
+        "process_control": 91.0,
+        "deviation_management": 94,
+        "equipment_qualification": 80,
+        "quality_oversight": 75,
+        "batch_release": 0
+      },
+      "gmp_gaps": [
+        "batch_release: 0/100 \u2014 21 CFR 211.165 \u2014 Testing and release for distribution"
+      ],
+      "gmp_status": "AT_RISK",
+      "framework": "WHO GMP + EU GMP Annex 1 + FDA 21 CFR Part 211"
+    },
+    "qms": {
+      "qms_risk_score": 20.9,
+      "qms_risk_level": "LOW",
+      "qms_action_required": "Document and close. No batch impact expected.",
+      "dimension_risks": {
+        "process_performance": 26.2,
+        "capa_effectiveness": 7.2,
+        "change_control": 35,
+        "supplier_quality": 20,
+        "data_integrity": 10,
+        "management_oversight": 27.6
+      },
+      "dimensions": {
+        "process_performance": {
+          "weight": 0.25,
+          "ich": "ICH Q10 \u00a73.2.1 \u2014 Process Performance and Product Quality Monitoring",
+          "description": "Ability to maintain CPPs within validated ranges"
+        },
+        "capa_effectiveness": {
+          "weight": 0.2,
+          "ich": "ICH Q10 \u00a73.2.2 \u2014 CAPA System",
+          "description": "Corrective and preventive action adequacy"
+        },
+        "change_control": {
+          "weight": 0.15,
+          "ich": "ICH Q10 \u00a73.2.3 \u2014 Change Management",
+          "description": "Controlled change management for process/equipment"
+        },
+        "supplier_quality": {
+          "weight": 0.1,
+          "ich": "ICH Q10 \u00a72.7 \u2014 Materials Management",
+          "description": "Raw material and supplier quality oversight"
+        },
+        "data_integrity": {
+          "weight": 0.15,
+          "ich": "ICH Q10 + ALCOA+ principles",
+          "description": "Attributable, Legible, Contemporaneous, Original, Accurate data"
+        },
+        "management_oversight": {
+          "weight": 0.15,
+          "ich": "ICH Q10 \u00a73.3 \u2014 Management Review",
+          "description": "Senior management review of quality metrics"
+        }
+      },
+      "ich_framework": "ICH Q10 Pharmaceutical Quality System",
+      "trend": "STABLE",
+      "ai_mitigation": "AI early detection reduced QMS risk by ~40% vs manual monitoring"
+    },
+    "pv": {
+      "pv_risk_score": 93.6,
+      "pv_risk_level": "CRITICAL",
+      "pv_action": "Report to PV team immediately",
+      "patient_safety_risk": "Modified drug release profile \u2014 bioavailability change for extended-release products",
+      "therapeutic_class": "Antidiabetic",
+      "pv_reportable": false,
+      "ich_pv_reference": "ICH E2E + ICH Q8 CQA \u2014 dissolution/release profile",
+      "who_pv_reference": "WHO \u2014 Process validation requirements",
+      "pv_notification_required": true,
+      "regulatory_reporting": "Internal QA documentation only"
+    },
+    "ich": {
+      "anomaly_type": "temperature_deviation",
+      "failure_mode": "coating_thermostat_drift",
+      "cqa": "Equipment temperature control system",
+      "risk_statement": "Thermostat drift indicates loss of process control \u2014 ICH Q10 CAPA and ICH Q9 risk reassessment required.",
+      "ich_guidelines": [
+        {
+          "guideline": "Q7",
+          "title": "GMP for Active Pharmaceutical Ingredients",
+          "relevance": "Manufacturing process controls, deviation handling, batch records.",
+          "sections": [
+            "Section 8: Production and In-Process Controls",
+            "Section 10: Storage and Distribution",
+            "Section 13: Change Control",
+            "Section 14: Rejection and Reuse of Materials"
+          ]
+        },
+        {
+          "guideline": "Q9(R1)",
+          "title": "Quality Risk Management",
+          "relevance": "Risk assessment for deviation impact on patient safety and product quality.",
+          "sections": [
+            "Section 4.3 Risk Assessment",
+            "Section 4.4 Risk Control",
+            "Section 4.5 Risk Communication",
+            "Section 4.6 Risk Review"
+          ]
+        },
+        {
+          "guideline": "Q10",
+          "title": "Pharmaceutical Quality System",
+          "relevance": "CAPA system, change management, management review of deviations.",
+          "sections": [
+            "Section 3.2.1 Process Performance and Product Quality Monitoring",
+            "Section 3.2.2 CAPA System",
+            "Section 3.2.3 Change Management System",
+            "Section 3.3 Management Review"
+          ]
+        },
+        {
+          "guideline": "Q1A(R2)",
+          "title": "Stability Testing of New Drug Substances and Products",
+          "relevance": "Temperature excursions affect shelf-life and stability data integrity.",
+          "sections": [
+            "2.1.1 General",
+            "2.2.2 Storage Conditions"
+          ]
+        }
+      ],
+      "fda_citations": [
+        {
+          "section": "211.68",
+          "requirement": "Automatic, mechanical, and electronic equipment \u2014 calibration"
+        },
+        {
+          "section": "211.100",
+          "requirement": "Written procedures; deviations must be recorded and justified"
+        },
+        {
+          "section": "211.192",
+          "requirement": "Production record review \u2014 investigation of unexplained discrepancies"
+        },
+        {
+          "section": "211.67",
+          "requirement": "Equipment cleaning and maintenance"
+        }
+      ],
+      "regulatory_summary": "This deviation affects Equipment temperature control system. Applicable: Q7, Q9(R1), Q10, Q1A(R2) + FDA 21 CFR \u00a7211.68, \u00a7211.100, \u00a7211.192, \u00a7211.67."
+    },
+    "ich_risk": {
+      "severity": 3,
+      "occurrence": 2,
+      "detectability": 1,
+      "rpn": 6,
+      "risk_level": "LOW",
+      "method": "ICH Q9(R1) Risk Priority Number (RPN)",
+      "recommendation": "Standard deviation investigation per ICH Q7 Section 14"
+    },
+    "industry_improvement": {
+      "detection_time_reduction_pct": 99.8,
+      "investigation_time_reduction_pct": 99.4,
+      "cost_saving_per_deviation_lakhs": 5.2,
+      "batch_loss_prevented_lakhs": 10.4
+    },
+    "regulatory_summary": "GMP Score: 81.0/100 (B \u2014 Minor Gaps). QMS Risk: 20.9/100 (LOW). PV Risk: 93.6/100 (CRITICAL). ICH Q9 RPN: 6 (LOW). Action: Document and close. No batch impact expected."
+  },
+  "evidence": {
+    "temperature_stats": {
+      "source": "splunk_rest",
+      "rows": [
+        {
+          "equipment_id": "COAT-02",
+          "product": "Metformin_500mg",
+          "avg_temp": "42.89055555555555",
+          "max_temp": "49.72",
+          "min_temp": "36.21",
+          "readings": "36"
+        }
+      ]
+    },
+    "temperature_deviations": {
+      "source": "splunk_rest",
+      "rows": [
+        {
+          "timestamp": "2026-01-06T07:50:00",
+          "temperature_C": "49.68",
+          "equipment_id": "COAT-02",
+          "status": "DEVIATION"
+        },
+        {
+          "timestamp": "2026-01-06T07:30:00",
+          "temperature_C": "37.99",
+          "equipment_id": "COAT-02",
+          "status": "DEVIATION"
+        },
+        {
+          "timestamp": "2026-01-06T07:20:00",
+          "temperature_C": "36.21",
+          "equipment_id": "COAT-02",
+          "status": "DEVIATION"
+        },
+        {
+          "timestamp": "2026-01-06T07:15:00",
+          "temperature_C": "47.58",
+          "equipment_id": "COAT-02",
+          "status": "DEVIATION"
+        },
+        {
+          "timestamp": "2026-01-06T06:20:00",
+          "temperature_C": "49.48",
+          "equipment_id": "COAT-02",
+          "status": "DEVIATION"
+        },
+        {
+          "timestamp": "2026-01-06T06:05:00",
+          "temperature_C": "49.72",
+          "equipment_id": "COAT-02",
+          "status": "DEVIATION"
+        }
+      ]
+    },
+    "batch_qc": {
+      "source": "splunk_rest",
+      "rows": [
+        {
+          "batch_id": "BATCH-1011",
+          "product": "Atorvastatin_10mg",
+          "yield_pct": "98.14",
+          "deviation_count": "5",
+          "batch_status": "FAIL",
+          "oee_score": "87.11"
+        }
+      ]
+    },
+    "moisture": {
+      "source": "splunk_rest",
+      "rows": [
+        {
+          "equipment_id": "GRAN-01",
+          "avg_moisture": "3.013333333333333",
+          "max_moisture": "5.94",
+          "readings": "12"
+        }
+      ]
+    },
+    "equipment_downtime": {
+      "source": "splunk_rest",
+      "rows": [
+        {
+          "equipment_id": "GRAN-01",
+          "total_downtime": "676",
+          "events": "6"
+        },
+        {
+          "equipment_id": "COMPRESS-01",
+          "total_downtime": "609",
+          "events": "5"
+        },
+        {
+          "equipment_id": "GRAN-02",
+          "total_downtime": "609",
+          "events": "5"
+        },
+        {
+          "equipment_id": "COAT-02",
+          "total_downtime": "588",
+          "events": "4"
+        },
+        {
+          "equipment_id": "COAT-01",
+          "total_downtime": "337",
+          "events": "3"
+        }
+      ]
+    }
+  },
+  "agent_analysis": "**GMP DEVIATION REPORT \u2014 BATCH-1011**\n*Multi-Agent Investigation \u2014 Detection \u2192 Investigation \u2192 QA Review*\n*Regulatory Framework: FDA 21 CFR Part 211 + ICH Q7/Q8/Q9/Q10*\n\n**1. ROOT CAUSE**\nThe root cause is identified as coating_thermostat_drift on equipment_id COAT-02, leading to significant temperature_deviations for BATCH-1011 (Metformin_500mg). Splunk evidence from 2026-01-06 for COAT-02 shows 6 instances of temperature deviations, with readings ranging from a minimum of 36.21\u00b0C to a maximum of 49.72\u00b0C. These fluctuations indicate a loss of temperature control within the coating equipment, directly supporting the detected anomaly and failure mode.\nCQA Affected (ICH Q8): The critical quality attribute affected is the Equipment temperature control system. This directly impacts critical product attributes such as drug dissolution profile, coating uniformity and integrity, and the chemical stability of the drug product and API during the coating process.\n\n**2. GMP IMPACT: Major**\nPer ICH Q9(R1) Section 4.3 (Risk Assessment) and Section 4.4 (Risk Control), loss of process control, particularly temperature, constitutes a significant risk to product quality and patient safety. Thermostat drift indicates a failure in maintaining validated process parameters, directly impacting Critical Quality Attributes (CQAs) of the drug product such as dissolution, stability, and API degradation. This non-conformance requires investigation and corrective action as per FDA 21 CFR \u00a7211.192. Failure to maintain calibrated equipment (FDA 21 CFR \u00a7211.68) and record deviations (FDA 21 CFR \u00a7211.100) are also major GMP non-compliances. The 'batch_qc' evidence, showing a 'FAIL' status for a BATCH-1011 (though for a different product), reinforces the potential for product quality issues arising from such deviations.\nICH Q9 Risk Level: LOW (RPN=6)\nFDA: 21 CFR 211.68, 21 CFR 211.100, 21 CFR 211.192, 21 CFR 211.67\nICH: ICH Q9(R1) Section 4.3 Risk Assessment, ICH Q9(R1) Section 4.4 Risk Control, ICH Q10 Section 3.2.1 Process Performance and Product Quality Monitoring, ICH Q10 Section 3.2.2 CAPA System, ICH Q7 Section 8 Production and In-Process Controls\n\n**3. ICH REGULATORY COMPLIANCE**\nRisk Statement: Thermostat drift indicates loss of process control \u2014 ICH Q10 CAPA and ICH Q9 risk reassessment required.\n  - ICH Q7: Compliant: The investigation aligns with Q7 principles for production and in-process controls, deviation handling, and disposition of affected materials (e.g., quarantine, equipment removal, testing).\n  - ICH Q8: Gap: The CQA itself is misidentified as 'Equipment temperature control system' rather than the product attributes it impacts (e.g., dissolution, stability).\n  - ICH Q9: Gap: The risk assessment (RPN, severity, occurrence, and overall risk level) is inconsistent with the stated GMP impact and potential CQA impact, leading to an undervaluation of the risk. Needs re-evaluation.\n  - ICH Q10: Compliant: The proposed immediate and preventive CAPAs align well with Q10 principles for Process Performance and Product Quality Monitoring (3.2.1) and the CAPA System (3.2.2).\n\n**4. CORRECTIVE ACTION (CAPA per ICH Q10 \u00a73.2.2)**\n*Immediate:*\n1. Initiate a formal investigation into the temperature deviations of COAT-02 for BATCH-1011 (Metformin_500mg) and all other batches processed on COAT-02 during the period of deviation, including a thorough review of production records (ICH Q10, 3.2.1; FDA 21 CFR 211.192).\n2. Immediately quarantine BATCH-1011 (Metformin_500mg) and any other affected batches identified through the investigation. Conduct a comprehensive quality evaluation, including testing for dissolution, assay, and impurities (ICH Q7, 8; ICH Q9, 4.4).\n3. Remove COAT-02 from service immediately until the thermostat drift is identified, repaired, and the equipment is recalibrated and requalified according to established procedures (ICH Q7, 8; FDA 21 CFR 211.68).\n4. Perform an immediate diagnostic troubleshooting and calibration verification of the thermostat and temperature control system for COAT-02 to identify the specific cause of the drift (FDA 21 CFR 211.68).\n*Preventive:*\n1. Implement an enhanced preventative maintenance and calibration schedule for the thermostats and temperature control systems on all coating equipment (COAT-02 and COAT-01, given recurring anomalies) to prevent future drift (ICH Q10, 3.2.2; FDA 21 CFR 211.67).\n2. Evaluate and upgrade the temperature monitoring system on coating equipment to incorporate tighter deviation alarm limits, increased sampling frequency, and predictive analytics for early detection of potential thermostat drift (ICH Q10, 3.2.1).\n3. Conduct a review and update of standard operating procedures (SOPs) for coating equipment setup, operation, and in-process temperature monitoring, followed by retraining of relevant personnel to ensure adherence to validated parameters and prompt response to deviations (ICH Q10, 3.2.2; FDA 21 CFR 211.100).\n4. Perform a comprehensive risk assessment (ICH Q9, 4.3) across all critical processing equipment and parameters within the facility to identify and mitigate systemic vulnerabilities contributing to process control issues.\n\n**5. FINANCIAL IMPACT:** 13.8-45.2 lakhs (INR)\nBatch value: \u20b980L | Investigation: \u20b98L\nPrevented loss (early AI detection per ICH Q9): \u20b931.6L\n\n**6. CONFIDENCE SCORE: 4.5/5**\nHigh confidence due to strong alignment between the detection alert's anomaly type ('temperature_deviation'), failure mode ('coating_thermostat_drift'), and equipment ID ('COAT-02') with the detailed Splunk evidence. The Splunk data clearly shows 6 distinct temperature deviations on COAT-02, matching the alert's count, and presents a wide range of temperatures (36.21\u00b0C to 49.72\u00b0C) consistent with thermostat drift. The only minor discrepancy is the product listed for BATCH-1011 in the 'batch_qc' evidence (Atorvastatin_10mg) versus the alert (Metformin_500mg), which does not undermine the core finding of significant temperature deviations on COAT-02.\nQA Decision: RELEASE_FOR_CAPA \u2014 The investigation is well-structured and proposes appropriate immediate and preventive CAPAs to address the identified root cause. Therefore, the investigation is approved to proceed with immediate CAPA implementation. However, the compliance gaps identified (inaccurate ICH Q9 risk assessment, incorrect CQA identification per ICH Q8 principles, critical batch ID discrepancy, and misapplication of ICH Q1A(R2)) must be addressed and documented before final batch disposition and full CAPA closure. Specifically, a revised ICH Q9 risk assessment with appropriate severity and occurrence ratings, a corrected CQA definition, and clarification of the BATCH-1011 product are required to ensure full compliance and accurate risk representation per FDA 21 CFR Part 211.192 and ICH Q9(R1).\n\n**REGULATORY SCORES:**\nGMP Score: 81.0/100 (B \u2014 Minor Gaps)\nQMS Risk: 20.9/100 (LOW)\nPV Risk: 93.6/100 (CRITICAL)\nICH Q9 RPN: 6\nIndustry improvement: 99.4% faster than manual"
 }

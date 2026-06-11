@@ -38,16 +38,22 @@ Upload to YouTube (public/unlisted), under 3 minutes.
 
 ## Before recording — verify
 
+**Full step-by-step guide:** [FULL_DEMO_GUIDE.md](FULL_DEMO_GUIDE.md)
+
+**Critical:** Re-ingest Splunk data so dashboard matches CSV (BATCH-1027 = 24 deviations):
+```spl
+search index=pharma_manufacturing | delete
+```
+Then: `./scripts/ingest_to_splunk.sh`
+
 ```bash
 cd ~/pharmaops-monitor
-source .venv/bin/activate   # or: pip install -r requirements.txt
+source .venv/bin/activate
 export GEMINI_API_KEY=your_key
-
-# Splunk + MCP running:
-python3 agent/pharma_agent.py --autonomous --open-report
-
-# Works offline too (CSV fallback):
-python3 agent/mcp_chat_demo.py "What batches failed?"
+python3 agent/pharma_agent.py --health
+python3 scripts/run_regulatory_demo.py --open
+python3 agent/pharma_agent.py --multi-agent --open-report
+streamlit run app/streamlit_app.py
 ```
 
 ## Git push

@@ -34,7 +34,8 @@ PharmaOps Monitor is an end-to-end AI observability platform for pharmaceutical 
 2. **AI anomaly detection** — Splunk AI Toolkit with Median Absolute Deviation (MAD) catches temperature excursions in real time
 3. **Autonomous GMP investigator** — When anomalies are detected, an AI agent queries Splunk via MCP Server, gathers multi-source evidence, reasons with Google Gemini, and generates structured deviation reports with root cause, GMP impact, CAPA, and financial impact
 4. **Natural language interface** — Plant managers ask questions in plain English; Gemini generates SPL, MCP executes on live data, AI answers with specific batch IDs and numbers
-5. **FDA-style HTML reports** — Professional deviation reports open in browser for QA review
+5. **FDA + ICH compliant reports** — Maps every deviation to ICH Q7/Q8/Q9/Q10 + FDA 21 CFR Part 211 with Q9 Risk Priority Number (RPN)
+6. **FDA-style HTML reports** — Professional deviation reports open in browser for QA review
 
 ## How we built it
 
@@ -53,9 +54,17 @@ Architecture: Manufacturing CSVs → Splunk Index → AI Toolkit (anomaly detect
 - Getting Gemini to generate valid SPL from natural language required careful schema prompting
 - Ensuring the autonomous agent truly detects anomalies (not hardcoded batch IDs) was critical for demonstrating agentic behavior
 
+## Regulatory Framework
+
+- **ICH Q7** — GMP for APIs (process controls, deviation handling)
+- **ICH Q8** — Critical Quality Attributes (temperature, moisture as CQAs)
+- **ICH Q9(R1)** — Quality Risk Management (RPN scoring for every deviation)
+- **ICH Q10** — Pharmaceutical Quality System (CAPA, change control)
+- **FDA 21 CFR Part 211** — US GMP requirements (§211.100, §211.192, §211.68)
+
 ## Accomplishments that we're proud of
 
-- First autonomous GMP compliance agent built on Splunk MCP
+- First autonomous GMP compliance agent built on Splunk MCP with ICH regulatory mapping
 - Full detect → investigate → report loop with zero human input
 - Natural language plant manager interface grounded in live Splunk data
 - FDA-style HTML deviation reports generated automatically

@@ -1,24 +1,33 @@
-"""Splunk MCP client with CSV fallback for offline demos."""
+"""Splunk data layer: MCP Server → REST API → local CSV fallback."""
 
 import json
 import re
 import ssl
+import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 from typing import Any
 
 import pandas as pd
 
 from config import CSV_SOURCES, SPLUNK_INDEX, SPLUNK_MCP_URL, load_mcp_token
 
+SPLUNK_REST_URL = "https://localhost:8089"
+SPLUNK_USER = __import__("os").getenv("SPLUNK_USER", "admin")
+SPLUNK_PASS = __import__("os").getenv("SPLUNK_PASS", "Splunk@23")
+
+
+def _ssl_ctx():
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
+
 
 def _mcp_request(spl: str, earliest: str = "-30d", latest: str = "now") -> dict:
     token = load_mcp_token()
     if not token:
-        return {"error": "MCP token not found. Set SPLUNK_MCP_TOKEN or ~/mcp_token.txt"}
-
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+        return {"error": "MCP token not found"}
 
     payload = {
         "jsonrpc": "2.0",
@@ -35,17 +44,55 @@ def _mcp_request(spl: str, earliest: str = "-30d", latest: str = "now") -> dict:
         headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
     )
     try:
-        resp = urllib.request.urlopen(req, context=ctx, timeout=60)
-        return json.loads(resp.read())
+        resp = urllib.request.urlopen(req, context=_ssl_ctx(), timeout=60)
+        return {"transport": "mcp", "data": json.loads(resp.read())}
     except Exception as exc:
         return {"error": str(exc)}
 
 
-def _extract_rows(response: dict) -> list[dict]:
-    if "error" in response:
+def _rest_search(spl: str, earliest: str = "0", latest: str = "now") -> dict:
+    ctx = _ssl_ctx()
+    creds = urllib.parse.urlencode({"username": SPLUNK_USER, "password": SPLUNK_PASS}).encode()
+    try:
+        login_req = urllib.request.Request(f"{SPLUNK_REST_URL}/services/auth/login", data=creds)
+        login_resp = urllib.request.urlopen(login_req, context=ctx, timeout=15)
+        token = ET.parse(login_resp).find(".//sessionKey").text
+
+        if not spl.strip().lower().startswith("search"):
+            spl = f"search {spl}"
+
+        search_data = urllib.parse.urlencode({
+            "search": spl,
+            "output_mode": "json",
+            "count": "50",
+            "earliest_time": earliest,
+            "latest_time": latest,
+        }).encode()
+        search_req = urllib.request.Request(
+            f"{SPLUNK_REST_URL}/services/search/jobs/export",
+            data=search_data,
+            headers={"Authorization": f"Splunk {token}"},
+        )
+        search_resp = urllib.request.urlopen(search_req, context=ctx, timeout=60)
+        rows = []
+        for line in search_resp:
+            try:
+                obj = json.loads(line)
+                if "result" in obj:
+                    rows.append(obj["result"])
+            except json.JSONDecodeError:
+                pass
+        return {"transport": "splunk_rest", "rows": rows}
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+def _extract_mcp_rows(response: dict) -> list[dict]:
+    data = response.get("data", response)
+    if "error" in response and "data" not in response:
         return []
 
-    result = response.get("result", response)
+    result = data.get("result", data) if isinstance(data, dict) else {}
     if isinstance(result, dict):
         content = result.get("content", [])
         for item in content:
@@ -73,7 +120,6 @@ def _extract_rows(response: dict) -> list[dict]:
         for key in ("results", "rows", "data"):
             if key in result and isinstance(result[key], list):
                 return result[key]
-
     return []
 
 
@@ -84,19 +130,20 @@ def _infer_source(spl: str) -> str | None:
     return None
 
 
-def _csv_fallback(spl: str) -> list[dict]:
+def _csv_query(spl: str) -> list[dict]:
     source = _infer_source(spl)
     if not source or not CSV_SOURCES[source].exists():
-        return _local_detect_anomalies() if "DEVIATION" in spl.upper() else []
+        if "DEVIATION" in spl.upper():
+            return _local_detect_anomalies()
+        return []
 
     df = pd.read_csv(CSV_SOURCES[source])
     spl_lower = spl.lower()
 
-    if "batch_status=fail" in spl_lower or "batch_status=\"fail\"" in spl_lower:
-        out = df[df["batch_status"] == "FAIL"].head(10)
-        return out.to_dict(orient="records")
+    if "batch_status=fail" in spl_lower or 'batch_status="fail"' in spl_lower:
+        return df[df["batch_status"] == "FAIL"].head(20).to_dict(orient="records")
 
-    if "status=deviation" in spl_lower or 'status="deviation"' in spl_lower:
+    if "status=deviation" in spl_lower:
         if "stats count" in spl_lower or "deviation_count" in spl_lower:
             group_cols = ["batch_id", "equipment_id"]
             if "product" in df.columns:
@@ -106,37 +153,28 @@ def _csv_fallback(spl: str) -> list[dict]:
                 .groupby(group_cols, as_index=False)
                 .agg(
                     deviation_count=("status", "count"),
-                    avg_temp=("temperature_C", "mean"),
-                    max_temp=("temperature_C", "max"),
-                    min_temp=("temperature_C", "min"),
+                    avg_temp=("temperature_C", "mean") if "temperature_C" in df.columns else ("status", "count"),
                 )
                 .sort_values("deviation_count", ascending=False)
-                .head(5)
+                .head(10)
             )
-            for col in ("avg_temp", "max_temp", "min_temp"):
-                if col in agg.columns:
-                    agg[col] = agg[col].round(2)
+            if "avg_temp" in agg.columns:
+                agg["avg_temp"] = agg["avg_temp"].round(2)
             return agg.to_dict(orient="records")
-        out = df[df["status"] == "DEVIATION"].head(20)
-        return out.to_dict(orient="records")
+        return df[df["status"] == "DEVIATION"].head(20).to_dict(orient="records")
 
     if "downtime_minutes" in spl_lower and "stats" in spl_lower:
-        out = (
+        return (
             df.groupby("equipment_id", as_index=False)["downtime_minutes"]
             .sum()
-            .rename(columns={"downtime_minutes": "total"})
-            .sort_values("total", ascending=False)
+            .rename(columns={"downtime_minutes": "total_downtime"})
+            .sort_values("total_downtime", ascending=False)
+            .to_dict(orient="records")
         )
-        return out.to_dict(orient="records")
 
-    if "batch_id=" in spl_lower:
-        match = re.search(r'batch_id[=\\"]+([A-Z0-9-]+)', spl, re.I)
-        if match:
-            out = df[df["batch_id"] == match.group(1)]
-            return out.to_dict(orient="records")
-
-    if "stats count by source" in spl_lower:
-        return [{"source": name, "count": len(CSV_SOURCES)} for name in CSV_SOURCES]
+    match = re.search(r'batch_id[=\\"]+([A-Z0-9-]+)', spl, re.I)
+    if match:
+        return df[df["batch_id"] == match.group(1)].to_dict(orient="records")
 
     return df.head(10).to_dict(orient="records")
 
@@ -146,9 +184,9 @@ def _local_detect_anomalies() -> list[dict]:
     if not path.exists():
         return []
     df = pd.read_csv(path)
-    dev = df[df["status"] == "DEVIATION"]
     out = (
-        dev.groupby(["batch_id", "equipment_id", "product"], as_index=False)
+        df[df["status"] == "DEVIATION"]
+        .groupby(["batch_id", "equipment_id", "product"], as_index=False)
         .agg(
             deviation_count=("status", "count"),
             avg_temp=("temperature_C", "mean"),
@@ -158,40 +196,75 @@ def _local_detect_anomalies() -> list[dict]:
         .sort_values("deviation_count", ascending=False)
         .head(5)
     )
-    for _, row in out.iterrows():
-        row["avg_temp"] = round(row["avg_temp"], 2)
-        row["max_temp"] = round(row["max_temp"], 2)
-        row["min_temp"] = round(row["min_temp"], 2)
+    for col in ("avg_temp", "max_temp", "min_temp"):
+        out[col] = out[col].round(2)
     return out.to_dict(orient="records")
 
 
+def health_check() -> dict:
+    """Check Splunk MCP, REST, and local CSV availability."""
+    status = {"mcp": False, "splunk_rest": False, "csv": False, "recommended": "csv"}
+
+    token = load_mcp_token()
+    if token:
+        r = _mcp_request(f"search index={SPLUNK_INDEX} | head 1")
+        if "error" not in r and _extract_mcp_rows(r):
+            status["mcp"] = True
+            status["recommended"] = "mcp"
+
+    r2 = _rest_search(f"index={SPLUNK_INDEX} | head 1")
+    if r2.get("rows"):
+        status["splunk_rest"] = True
+        if not status["mcp"]:
+            status["recommended"] = "splunk_rest"
+
+    if CSV_SOURCES["temperature_logs.csv"].exists():
+        status["csv"] = True
+        if not status["mcp"] and not status["splunk_rest"]:
+            status["recommended"] = "csv"
+
+    return status
+
+
 def search(spl: str, earliest: str = "-30d", latest: str = "now") -> dict:
-    """Run SPL via Splunk MCP; fall back to local CSV if MCP unavailable."""
+    """Query Splunk via MCP → REST → CSV. Returns clean rows for agents."""
     if not spl.strip().lower().startswith("search"):
         spl = f"search {spl}"
 
-    response = _mcp_request(spl, earliest, latest)
-    rows = _extract_rows(response)
-
+    # 1. Try MCP
+    mcp_resp = _mcp_request(spl, earliest, latest)
+    rows = _extract_mcp_rows(mcp_resp)
     if rows:
-        return {"source": "mcp", "rows": rows, "raw": response}
+        return {"source": "mcp", "rows": rows}
 
-    if "error" in response:
-        fallback_rows = _csv_fallback(spl)
-        if fallback_rows:
-            return {
-                "source": "csv_fallback",
-                "rows": fallback_rows,
-                "warning": response["error"],
+    # 2. Try Splunk REST
+    rest_resp = _rest_search(spl, earliest="0", latest=latest)
+    rows = rest_resp.get("rows", [])
+    if rows:
+        return {"source": "splunk_rest", "rows": rows}
+
+    # 3. CSV fallback
+    rows = _csv_query(spl)
+    if rows:
+        return {"source": "csv", "rows": rows}
+
+    err = mcp_resp.get("error") or rest_resp.get("error") or "No data"
+    return {"source": "error", "rows": [], "error": err}
+
+
+def clean_evidence(evidence: dict) -> dict:
+    """Strip transport warnings before sending to Gemini — keep only data rows."""
+    cleaned = {}
+    for key, val in evidence.items():
+        if isinstance(val, dict):
+            cleaned[key] = {
+                "source": val.get("source", "unknown"),
+                "rows": val.get("rows", [])[:10],
             }
-        return {"source": "error", "rows": [], "error": response["error"]}
-
-    fallback_rows = _csv_fallback(spl)
-    return {"source": "csv_fallback" if fallback_rows else "mcp", "rows": fallback_rows, "raw": response}
+    return cleaned
 
 
 def detect_top_anomaly() -> dict | None:
-    """Autonomously detect the batch with the most temperature deviations."""
     spl = (
         f"search index={SPLUNK_INDEX} source=temperature_logs.csv status=DEVIATION "
         "| stats count as deviation_count avg(temperature_C) as avg_temp "
@@ -200,17 +273,14 @@ def detect_top_anomaly() -> dict | None:
         "| sort -deviation_count | head 1"
     )
     result = search(spl)
-    rows = result.get("rows", [])
-    if not rows:
-        rows = _local_detect_anomalies()
+    rows = result.get("rows") or _local_detect_anomalies()
     if not rows:
         return None
 
     top = rows[0]
     count = int(top.get("deviation_count", top.get("count", 0)))
-    avg = float(top.get("avg_temp", 42))
-    spec_mid = 42.5
-    sigma = round(abs(avg - spec_mid) / 2.5, 1) if avg else 2.5
+    avg = float(top.get("avg_temp", 42.5))
+    sigma = round(abs(avg - 42.5) / 2.5, 1)
 
     return {
         "batch_id": top["batch_id"],

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Regulatory Intelligence Report — BATCH-1027</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;padding:24px;color:#1a202c}
+.report{max-width:1000px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.1);overflow:hidden}
+.header{background:linear-gradient(135deg,#0f2744,#1e5a8a);color:#fff;padding:32px}
+.header h1{font-size:1.6rem;margin-bottom:6px}
+.header p{opacity:0.85;font-size:0.9rem}
+.scores{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:2px solid #e2e8f0}
+.score-card{padding:24px;text-align:center;border-right:1px solid #e2e8f0}
+.score-card:last-child{border-right:none}
+.score-val{font-size:2.2rem;font-weight:700}
+.score-label{font-size:0.75rem;text-transform:uppercase;color:#64748b;margin-top:4px;letter-spacing:0.05em}
+.section{padding:28px 32px;border-bottom:1px solid #e2e8f0}
+.section h2{font-size:1rem;color:#0f2744;margin-bottom:16px;padding-left:12px;border-left:4px solid #1e5a8a}
+table{width:100%;border-collapse:collapse;font-size:0.9rem}
+th{background:#f8fafc;padding:10px 12px;text-align:left;color:#475569;font-size:0.8rem;text-transform:uppercase}
+td{padding:10px 12px;border-bottom:1px solid #f1f5f9}
+.bar{background:#e2e8f0;border-radius:4px;height:8px;width:120px}
+.bar-fill{height:8px;border-radius:4px}
+.improvement{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:12px 0}
+.pv-alert{background:#fef2f2;border-left:4px solid #ef4444;padding:16px;border-radius:0 8px 8px 0}
+.tag{display:inline-block;padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:600;margin:2px}
+.tag-red{background:#fee2e2;color:#b91c1c}
+.tag-green{background:#dcfce7;color:#15803d}
+.tag-orange{background:#ffedd5;color:#c2410c}
+.footer{padding:20px 32px;background:#f8fafc;font-size:0.8rem;color:#64748b;text-align:center}
+</style>
+</head>
+<body>
+<div class="report">
+  <div class="header">
+    <h1>PharmaOps Regulatory Intelligence Report</h1>
+    <p>Batch BATCH-1027 — Amlodipine_5mg | GMP + ICH + QMS + Pharmacovigilance</p>
+    <p style="margin-top:8px;font-size:0.85rem">GMP Score: 70.7/100 (B — Minor Gaps). QMS Risk: 43.0/100 (MEDIUM). PV Risk: 100/100 (CRITICAL). ICH Q9 RPN: 12 (MEDIUM). Action: Standard deviation investigation. Monitor trend.</p>
+  </div>
+
+  <div class="scores">
+    <div class="score-card">
+      <div class="score-val" style="color:#22c55e">70.7</div>
+      <div class="score-label">GMP Score /100</div>
+      <div style="font-size:0.8rem;margin-top:6px;color:#64748b">B — Minor Gaps</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val" style="color:#f97316">43.0</div>
+      <div class="score-label">QMS Risk /100</div>
+      <div style="font-size:0.8rem;margin-top:6px;color:#64748b">MEDIUM</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val" style="color:#ef4444">100</div>
+      <div class="score-label">PV Risk /100</div>
+      <div style="font-size:0.8rem;margin-top:6px;color:#64748b">CRITICAL</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val" style="color:#1e5a8a">12</div>
+      <div class="score-label">ICH Q9 RPN</div>
+      <div style="font-size:0.8rem;margin-top:6px;color:#64748b">MEDIUM</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>GMP Compliance Assessment (WHO + EU + FDA 21 CFR 211)</h2>
+    <table>
+      <tr><th>Pillar</th><th>Score</th><th>Value</th></tr>
+      <tr><td>Documentation</td><td><div class="bar"><div class="bar-fill" style="width:100%;background:#22c55e"></div></div></td><td>100/100</td></tr><tr><td>Process Control</td><td><div class="bar"><div class="bar-fill" style="width:64.0%;background:#22c55e"></div></div></td><td>64/100</td></tr><tr><td>Deviation Management</td><td><div class="bar"><div class="bar-fill" style="width:76%;background:#22c55e"></div></div></td><td>76/100</td></tr><tr><td>Equipment Qualification</td><td><div class="bar"><div class="bar-fill" style="width:80%;background:#22c55e"></div></div></td><td>80/100</td></tr><tr><td>Quality Oversight</td><td><div class="bar"><div class="bar-fill" style="width:75%;background:#22c55e"></div></div></td><td>75/100</td></tr><tr><td>Batch Release</td><td><div class="bar"><div class="bar-fill" style="width:0%;background:#22c55e"></div></div></td><td>0/100</td></tr>
+    </table>
+    <p style="margin-top:12px;font-size:0.85rem">Status: <span class="tag tag-orange">AT_RISK</span>
+    Framework: WHO GMP + EU GMP Annex 1 + FDA 21 CFR Part 211</p>
+  </div>
+
+  <div class="section">
+    <h2>QMS Risk Score (ICH Q10 Quality Management System)</h2>
+    <table>
+      <tr><th>Dimension</th><th>Risk</th><th>Score</th><th>ICH Reference</th></tr>
+      <tr><td>Process Performance</td><td><div class="bar"><div class="bar-fill" style="width:74.8%;background:#f97316"></div></div></td><td>75</td><td style="font-size:0.8rem">ICH Q10 §3.2.1 — Process Performance and Product Quality Monitoring</td></tr><tr><td>Capa Effectiveness</td><td><div class="bar"><div class="bar-fill" style="width:28.8%;background:#f97316"></div></div></td><td>29</td><td style="font-size:0.8rem">ICH Q10 §3.2.2 — CAPA System</td></tr><tr><td>Change Control</td><td><div class="bar"><div class="bar-fill" style="width:35%;background:#f97316"></div></div></td><td>35</td><td style="font-size:0.8rem">ICH Q10 §3.2.3 — Change Management</td></tr><tr><td>Supplier Quality</td><td><div class="bar"><div class="bar-fill" style="width:20%;background:#f97316"></div></div></td><td>20</td><td style="font-size:0.8rem">ICH Q10 §2.7 — Materials Management</td></tr><tr><td>Data Integrity</td><td><div class="bar"><div class="bar-fill" style="width:10%;background:#f97316"></div></div></td><td>10</td><td style="font-size:0.8rem">ICH Q10 + ALCOA+ principles</td></tr><tr><td>Management Oversight</td><td><div class="bar"><div class="bar-fill" style="width:65.4%;background:#f97316"></div></div></td><td>65</td><td style="font-size:0.8rem">ICH Q10 §3.3 — Management Review</td></tr>
+    </table>
+    <p style="margin-top:12px"><strong>Action:</strong> Standard deviation investigation. Monitor trend.</p>
+    <p style="font-size:0.85rem;color:#64748b">Trend: STABLE | AI early detection reduced QMS risk by ~40% vs manual monitoring</p>
+  </div>
+
+  <div class="section">
+    <h2>Pharmacovigilance (PV) Assessment (ICH E2E / WHO PV)</h2>
+    <div class="pv-alert">
+      <strong>Patient Safety Risk:</strong> Modified drug release profile — bioavailability change for extended-release products<br>
+      <strong>Therapeutic Class:</strong> Antihypertensive | <strong>Action:</strong> Report to PV team immediately<br>
+      <strong>PV Reportable:</strong> YES — notify PV team<br>
+      <strong>Regulatory Reporting:</strong> Submit Product Quality Complaint to PV system per ICH E2E
+    </div>
+    <p style="margin-top:10px;font-size:0.85rem">ICH: ICH E2E + ICH Q8 CQA — dissolution/release profile | WHO: WHO — Process validation requirements</p>
+  </div>
+
+  <div class="section">
+    <h2>ICH Regulatory Mapping</h2>
+    <p style="margin-bottom:12px"><strong>CQA (ICH Q8):</strong> Equipment temperature control system</p>
+    <table>
+      <tr><th>Guideline</th><th>Title</th><th>Relevance</th></tr>
+      <tr><td><strong>Q7</strong></td><td>GMP for Active Pharmaceutical Ingredients</td><td style="font-size:0.85rem">Manufacturing process controls, deviation handling, batch records.</td></tr><tr><td><strong>Q9(R1)</strong></td><td>Quality Risk Management</td><td style="font-size:0.85rem">Risk assessment for deviation impact on patient safety and product quality.</td></tr><tr><td><strong>Q10</strong></td><td>Pharmaceutical Quality System</td><td style="font-size:0.85rem">CAPA system, change management, management review of deviations.</td></tr><tr><td><strong>Q1A(R2)</strong></td><td>Stability Testing of New Drug Substances and Products</td><td style="font-size:0.85rem">Temperature excursions affect shelf-life and stability data integrity.</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Industry Impact — Manual vs PharmaOps AI (Previous Study Baseline)</h2>
+    <div class="improvement">
+      <table>
+        <tr><th>Metric</th><th>Manual (Industry Baseline)</th><th>PharmaOps AI</th><th>Improvement</th></tr>
+        <tr><td>Detection time</td><td>4.0 hours</td><td>30 seconds</td><td><span class="tag tag-green">99.8% faster</span></td></tr>
+        <tr><td>Investigation time</td><td>6.5 hours</td><td>2.5 minutes</td><td><span class="tag tag-green">99.4% faster</span></td></tr>
+        <tr><td>Cost per deviation</td><td>₹5.2L investigation</td><td>Automated</td><td><span class="tag tag-green">~₹5.2L saved</span></td></tr>
+        <tr><td>Batch loss risk</td><td>₹50-150L per failure</td><td>Early AI catch</td><td><span class="tag tag-green">₹21.5L+ prevented</span></td></tr>
+      </table>
+      <p style="margin-top:12px;font-size:0.85rem">Based on ISPE/PDA industry benchmarks: manual deviation investigation averages 4-8 hours (PDA TR-59). FDA 2023 data: 500+ warning letters for inadequate monitoring.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    PharmaOps Monitor · Regulatory Intelligence Report · Splunk Agentic Ops Hackathon 2026<br>
+    Frameworks: GMP (WHO/EU/FDA) · ICH Q7/Q8/Q9/Q10 · ICH E2E PV · ICH Q10 QMS
+  </div>
+</div>
+</body>
+</html>

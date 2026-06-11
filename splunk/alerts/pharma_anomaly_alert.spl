@@ -1,0 +1,14 @@
+# PharmaOps Monitor — Splunk AI Anomaly Alert
+# Triggers when temperature deviations exceed GMP limits
+# Install: Settings → Searches, reports, and alerts → New alert
+
+index=pharma_manufacturing source="temperature_logs.csv" status="DEVIATION"
+| stats count as deviation_count latest(timestamp) as last_deviation by batch_id product equipment_id
+| where deviation_count >= 10
+| eval severity=case(deviation_count>=20,"CRITICAL",deviation_count>=10,"HIGH",1=1,"MEDIUM")
+| eval alert_message="GMP TEMPERATURE DEVIATION: ".batch_id." (".deviation_count." events) — Product: ".product
+| table batch_id product equipment_id deviation_count severity last_deviation alert_message
+
+# Alert action: Run script
+# /path/to/pharmaops-monitor/agent/watchdog.py --once
+# Or webhook: http://localhost:8501 (Streamlit) / custom webhook endpoint

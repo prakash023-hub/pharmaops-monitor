@@ -1,0 +1,77 @@
+<dashboard version="1.1" theme="light">
+  <label>PharmaOps Monitor Classic</label>
+  <description>GMP manufacturing observability</description>
+  <init>
+    <earliest>0</earliest>
+    <latest>now</latest>
+  </init>
+  <fieldset submitButton="false">
+    <input type="time" token="field1">
+      <label>Time Range</label>
+      <default><earliest>0</earliest><latest>now</latest></default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Temperature Deviations by Batch</title>
+      <table>
+        <search>
+          <query><![CDATA[search index=pharma_manufacturing sourcetype=temperature_logs.csv _raw=*DEVIATION* | rex field=_raw "^(?<timestamp>[^,]+),(?<batch_id>[^,]+),(?<equipment_id>[^,]+),(?<product>[^,]+),(?<temperature_C>[^,]+),(?<status>[^,]+)" | search batch_id=BATCH-* | stats count by batch_id equipment_id | sort -count]]></query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="count">20</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>AI Temperature Anomaly Detection</title>
+      <chart>
+        <search>
+          <query><![CDATA[search index=pharma_manufacturing sourcetype=temperature_logs.csv | rex field=_raw "^(?<timestamp>[^,]+),(?<batch_id>[^,]+),(?<equipment_id>[^,]+),(?<product>[^,]+),(?<temperature_C>[^,]+),(?<status>[^,]+)" | search batch_id=BATCH-* | eval _time=strptime(timestamp, "%Y-%m-%dT%H:%M:%S"), temperature_C=tonumber(temperature_C) | timechart span=1h avg(temperature_C) as temperature]]></query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Batch Pass/Fail Status</title>
+      <chart>
+        <search>
+          <query><![CDATA[search index=pharma_manufacturing sourcetype=batch_summary.csv | rex field=_raw "^(?<timestamp>[^,]+),(?<batch_id>[^,]+),(?<product>[^,]+),(?<yield_pct>[^,]+),(?<deviation_count>[^,]+),(?<batch_status>[^,]+)" | search batch_id=BATCH-* | stats count by batch_status]]></query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Equipment Downtime by Machine</title>
+      <chart>
+        <search>
+          <query><![CDATA[search index=pharma_manufacturing sourcetype=equipment_downtime.csv | rex field=_raw "^(?<timestamp>[^,]+),(?<equipment_id>[^,]+),(?<equipment_type>[^,]+),(?<downtime_minutes>[^,]+),(?<reason>[^,]+),(?<severity>[^,]+)" | search equipment_id=COAT-* OR equipment_id=GRAN-* OR equipment_id=COMPRESS-* | stats sum(downtime_minutes) as total_downtime by equipment_id | sort -total_downtime]]></query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>GMP Temperature Monitoring with AI Bounds</title>
+      <chart>
+        <search>
+          <query><![CDATA[search index=pharma_manufacturing sourcetype=temperature_logs.csv | rex field=_raw "^(?<timestamp>[^,]+),(?<batch_id>[^,]+),(?<equipment_id>[^,]+),(?<product>[^,]+),(?<temperature_C>[^,]+),(?<status>[^,]+)" | search batch_id=BATCH-* | eval _time=strptime(timestamp, "%Y-%m-%dT%H:%M:%S"), temperature_C=tonumber(temperature_C) | timechart span=2h avg(temperature_C) as temperature | eval GMP_Safe_Upper=45, GMP_Safe_Lower=40]]></query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+      </chart>
+    </panel>
+  </row>
+</dashboard>

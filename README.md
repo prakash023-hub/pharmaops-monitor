@@ -1,6 +1,6 @@
 # PharmaOps Monitor
 
-> AI agents on Splunk that detect GMP deviations, investigate root causes autonomously, and generate FDA-compliant reports — preventing ₹50L+ batch failures in real time.
+> End-to-end AI agent on Splunk that detects GMP deviations, investigates root causes autonomously, and generates FDA-compliant reports — preventing ₹50L+ batch failures in real time.
 
 [![Splunk Agentic Ops Hackathon 2026](https://img.shields.io/badge/Hackathon-Splunk%20Agentic%20Ops%202026-blue)](https://splunk.devpost.com/)
 [![Track](https://img.shields.io/badge/Track-Observability-green)](https://splunk.devpost.com/)
@@ -8,176 +8,200 @@
 
 ![Dashboard Overview](docs/dashboard/00_dashboard_overview.png)
 
-## Problem
+## What This Does
 
-India exports **$25B in pharma** annually. Batch failures cost **₹50–150 lakhs** each. The FDA issues **500+ warning letters/year** for inadequate monitoring. Plant managers have no real-time AI view of GMP deviations.
+PharmaOps Monitor is a **3-agent autonomous GMP compliance system** on Splunk:
 
-## Solution
+```
+Detection Agent → Investigation Agent → QA Review Agent → FDA Report → Alert
+```
 
-PharmaOps Monitor ingests pharma manufacturing data into Splunk, uses **Splunk AI Toolkit** for anomaly detection, and deploys **autonomous AI agents** via **Splunk MCP Server** to investigate deviations and generate FDA-compliant CAPA reports — without human intervention.
+| Agent | Role |
+|---|---|
+| **Detection Agent** | Scans Splunk for temperature/moisture GMP anomalies (MAD/MLTK) |
+| **Investigation Agent** | Multi-source evidence + Gemini root cause + CAPA |
+| **QA Review Agent** | FDA 21 CFR + **ICH Q7/Q8/Q9/Q10** compliance validation + approve/reject |
+| **Regulatory Intelligence** | **GMP score** + **QMS risk** + **PV assessment** + unified HTML report |
+
+| Layer | Component |
+|---|---|
+| **Data** | FDA-aligned manufacturing logs (consistent across all sources) |
+| **Detection** | Splunk AI Toolkit MAD + saved alert (`splunk/alerts/`) |
+| **Agents** | 3-agent system via Splunk MCP + REST + Gemini |
+| **Output** | FDA HTML reports + financial impact + alert log |
+| **UI** | Streamlit command center + CLI + NL chat + watchdog auto-trigger |
 
 ## Architecture
 
 ![Architecture](architecture_diagram.png)
 
-```
-Manufacturing Data → Splunk Index → AI Toolkit (MAD anomalies)
-                                        ↓
-                              Splunk MCP Server
-                                        ↓
-                    Python Agents + Google Gemini
-                                        ↓
-                         FDA HTML Deviation Reports
-```
+## Quick Start (10 minutes)
 
-## Features
-
-| Feature | Technology |
-|---|---|
-| AI temperature anomaly detection | Splunk AI Toolkit + MAD algorithm |
-| GMP dashboard (5 panels) | Splunk Enterprise |
-| Autonomous GMP investigator | Splunk MCP + Gemini 2.5-flash |
-| Natural language plant manager chat | Gemini generates SPL → MCP executes |
-| FDA-style deviation reports | Auto-generated HTML reports |
-
-## Quick Demo (5 minutes)
-
-### Prerequisites
-
-- Splunk Enterprise 10.4.0 (with Developer License)
-- Splunk AI Toolkit 5.7.4
-- Splunk MCP Server 1.2.0
-- Python 3.12+
-- Google Gemini API key
-
-### 1. Clone and install
+### 1. Install
 
 ```bash
 git clone https://github.com/prakash023-hub/pharmaops-monitor.git
 cd pharmaops-monitor
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # add your GEMINI_API_KEY
-export GEMINI_API_KEY=your_key_here
+export GEMINI_API_KEY=your_key
 ```
 
-### 2. Load data into Splunk
+### 2. Generate data (FDA-aligned, consistent across all sources)
 
 ```bash
 python3 generate_pharma_data.py
-# Upload CSVs to index: pharma_manufacturing
-# (temperature_logs.csv, moisture_logs.csv, batch_summary.csv, equipment_downtime.csv)
 ```
 
-### 3. Configure Splunk MCP
+### 3. Splunk setup (app + data + dashboards — one command)
 
 ```bash
-# Save your MCP bearer token:
+chmod +x scripts/splunk_full_setup.sh
+./scripts/splunk_full_setup.sh
+```
+
+This installs the PharmaOps Splunk app (CSV field extraction), restarts Splunk, ingests data, and installs dashboards.
+
+Open: http://localhost:8000/en-US/app/search/pharmaops_monitor (time range: **All time**)
+
+Classic dashboard: http://localhost:8000/en-US/app/search/pharmaops_classic
+
+Verify: `./scripts/verify_splunk.sh` — expect BATCH-1027 = **24** deviations
+
+### 5. Configure Splunk access
+
+```bash
 echo "your_mcp_token" > ~/mcp_token.txt
-# Or: export SPLUNK_MCP_TOKEN=your_mcp_token
+export SPLUNK_PASS=your_splunk_password   # default: Splunk@23
 ```
 
-### 4. Run autonomous agent (Grand Prize demo)
+### 6. Run multi-agent demo
 
 ```bash
-./run_demo.sh
-# Or step by step:
-python3 agent/pharma_agent.py --autonomous --open-report
+chmod +x setup.sh run_demo.sh
+./setup.sh          # one-command judge setup
+./run_demo.sh       # full multi-agent demo
 ```
 
-This will:
-1. **Detect** the batch with most temperature deviations (via Splunk MCP)
-2. **Investigate** — query temperature, QC, downtime, moisture evidence
-3. **Reason** with Gemini LLM
-4. **Generate** JSON + FDA HTML deviation report (opens in browser)
-
-### 5. Natural language chat
+Or step by step:
 
 ```bash
-python3 agent/mcp_chat_demo.py                              # 4 demo questions
-python3 agent/mcp_chat_demo.py "What batches failed?"       # single question
-python3 agent/mcp_chat_demo.py --interactive                # REPL mode
+python3 agent/pharma_agent.py --health
+python3 agent/pharma_agent.py --multi-agent --open-report   # 3-agent pipeline
+python3 agent/watchdog.py --once                            # auto-trigger
+streamlit run app/streamlit_app.py                          # web command center
 ```
 
-### 6. Regenerate dashboard previews (optional)
+## Regulatory Framework
 
-```bash
-python3 scripts/generate_dashboard_previews.py
-```
+Every deviation is automatically mapped to:
 
-## Agent Commands
-
-| Command | Description |
+| Standard | Guidelines |
 |---|---|
-| `python3 agent/pharma_agent.py --autonomous` | Detect + investigate top anomaly |
-| `python3 agent/pharma_agent.py --demo` | Investigate top 2 anomalies |
-| `python3 agent/pharma_agent.py --batch BATCH-1011` | Investigate specific batch |
-| `python3 agent/pharma_agent.py --autonomous --open-report` | Auto-open HTML report |
-| `python3 agent/generate_report_html.py agent/reports/report_BATCH-1011.json` | JSON → HTML |
-| `python3 agent/mcp_chat_demo.py --interactive` | Chat REPL |
+| **ICH** | Q1A (Stability), Q2 (Analytical), Q7 (GMP APIs), Q8 (CQAs), Q9 (Risk Mgmt), Q10 (Quality System), Q11 (Drug Substances) |
+| **FDA** | 21 CFR Part 211 — §211.100, §211.110, §211.192, §211.68 |
 
-## Dashboard Panels
+ICH Q9 Risk Priority Number (RPN) calculated for every investigation.
 
-| Panel | File |
-|---|---|
-| Temperature Deviations by Batch | [docs/dashboard/01_temperature_deviations_by_batch.png](docs/dashboard/01_temperature_deviations_by_batch.png) |
-| AI Temperature Anomaly Detection | [docs/dashboard/02_ai_anomaly_detection.png](docs/dashboard/02_ai_anomaly_detection.png) |
-| GMP Temperature Monitoring | [docs/dashboard/03_gmp_temperature_bounds.png](docs/dashboard/03_gmp_temperature_bounds.png) |
-| Batch Pass/Fail Status | [docs/dashboard/04_batch_pass_fail.png](docs/dashboard/04_batch_pass_fail.png) |
-| Equipment Downtime | [docs/dashboard/05_equipment_downtime.png](docs/dashboard/05_equipment_downtime.png) |
+## Regulatory Intelligence (GMP + QMS + PV)
 
-## Data
+One command generates a **judge-ready regulatory report** with industry comparison:
+
+```bash
+python3 scripts/run_regulatory_demo.py --open
+```
+
+| Score | What it measures | Framework |
+|---|---|---|
+| **GMP Score** (0–100) | 6 pillars: documentation, process control, deviation mgmt, equipment, oversight, batch release | WHO + EU GMP + FDA 21 CFR 211 |
+| **QMS Risk** (0–100) | Process performance, CAPA, change control, supplier quality, data integrity, management oversight | ICH Q10 |
+| **PV Risk** (0–100) | Patient safety impact, reportability, PV team action | ICH E2E / WHO PV |
+| **ICH Q9 RPN** | Severity × Occurrence × Detectability | ICH Q9 |
+
+**Demo case BATCH-1027** (Amlodipine 5mg, coating thermostat drift):
+- GMP 70.7/100 (B — Minor Gaps) — batch release blocked at 0/100
+- QMS Risk 43/100 (MEDIUM) — CAPA effectiveness gap flagged
+- PV Risk 100/100 (CRITICAL) — report to PV team immediately
+- **99.8% faster detection** vs manual (PDA TR-59 baseline: 4 hours → 30 sec)
+
+See `docs/INDUSTRY_IMPACT_STUDY.md` for manual vs AI comparison.
+
+## Agent Pipeline
+
+```
+[STEP 0] Health check — MCP / Splunk REST / CSV / Gemini
+[STEP 1] Autonomous detection — finds worst batch (no hardcoding)
+[STEP 2] Evidence collection — temperature, QC, moisture, downtime
+[STEP 3] Gemini reasoning — root cause, GMP impact, CAPA
+[STEP 4] FDA HTML report — opens in browser
+[STEP 5] Alert logged — agent/reports/alerts.jsonl
+```
+
+## Data (FDA-Aligned Synthetic)
+
+Modeled on real GMP parameters:
+- **Coating temperature:** 40-45°C (oral solid dosage, USP ranges)
+- **Granulation moisture:** 2-4% (standard pharma spec)
+- **Products:** Metformin, Amlodipine, Atorvastatin, Paracetamol, Azithromycin
+- **Failure batches:** BATCH-1027, BATCH-1011, BATCH-1049 (coating thermostat drift)
 
 | File | Rows | Description |
 |---|---|---|
-| temperature_logs.csv | 1,800 | Coating machine temp every 5 min |
+| temperature_logs.csv | 1,800 | Coating temp every 5 min |
 | moisture_logs.csv | 600 | Granulation moisture every 10 min |
-| batch_summary.csv | 50 | Batch yield, OEE, pass/fail |
-| equipment_downtime.csv | 23 | Downtime events with severity |
-| **Total** | **2,473** | `pharma_manufacturing` index |
+| batch_summary.csv | 50 | Yield, OEE, pass/fail |
+| equipment_downtime.csv | 18 | Downtime with severity |
 
-## Splunk Queries
-
-Saved in `splunk/` directory:
-
-- `anomaly_detection.spl` — MAD-based AI anomaly bounds
-- `deviation_by_batch.spl` — Temperature deviations by batch
-- `batch_quality.spl` — Pass/fail batch status
-- `equipment_downtime.spl` — Downtime by machine
-- `moisture_anomaly.spl` — Moisture deviation detection
+**One product per batch across ALL files** — no data inconsistencies.
 
 ## Project Structure
 
 ```
 pharmaops-monitor/
 ├── agent/
-│   ├── pharma_agent.py          # Autonomous GMP investigator
-│   ├── mcp_chat_demo.py         # Natural language interface
-│   ├── splunk_mcp.py            # Splunk MCP client + CSV fallback
-│   ├── generate_report_html.py  # FDA HTML report generator
-│   └── reports/                 # Generated JSON + HTML reports
-├── splunk/                      # Saved SPL queries
+│   ├── orchestrator.py       # End-to-end AI agent pipeline
+│   ├── pharma_agent.py       # CLI entry point
+│   ├── mcp_chat_demo.py      # Natural language interface
+│   ├── splunk_mcp.py         # MCP → REST → CSV data layer
+│   ├── generate_report_html.py
+│   ├── gmp_scorer.py         # GMP compliance score 0–100
+│   ├── qms_risk.py           # ICH Q10 QMS risk score
+│   ├── pv_assessment.py      # Pharmacovigilance risk
+│   ├── regulatory_report.py  # Unified regulatory HTML report
+│   ├── ich_guidelines.py     # ICH Q1–Q11 + FDA mapping
+│   └── reports/              # JSON + HTML + regulatory reports
+├── app/
+│   └── streamlit_app.py      # Plant manager web console
+├── splunk/
+│   ├── dashboards/pharmaops_monitor.xml
+│   └── *.spl                 # Saved SPL queries
 ├── scripts/
+│   ├── ingest_to_splunk.sh
 │   └── generate_dashboard_previews.py
-├── docs/
-│   ├── dashboard/               # Dashboard screenshots
-│   ├── GRAND_PRIZE_VIDEO_SCRIPT.md
-│   └── DEVPOST_SUBMISSION.md
-├── architecture_diagram.png
-└── requirements.txt
+└── docs/
+    ├── dashboard/            # Dashboard screenshots
+    ├── GRAND_PRIZE_VIDEO_SCRIPT.md
+    └── DEVPOST_SUBMISSION.md
 ```
 
-## Hackathon Submission
+## Splunk Data Layer
+
+The agent tries data sources in order:
+1. **Splunk MCP Server** (preferred — Best Use of MCP prize)
+2. **Splunk REST API** (fallback when MCP unavailable)
+3. **Local CSV** (offline demo for judges)
+
+## Hackathon
 
 - **Track:** Observability
-- **Bonus prizes:** Best Use of Splunk MCP Server, Best Use of Splunk Hosted Models
+- **Bonus:** Best Use of Splunk MCP Server, Best Use of Splunk Hosted Models
 - **Video script:** [docs/GRAND_PRIZE_VIDEO_SCRIPT.md](docs/GRAND_PRIZE_VIDEO_SCRIPT.md)
-- **Devpost copy:** [docs/DEVPOST_SUBMISSION.md](docs/DEVPOST_SUBMISSION.md)
+- **Devpost:** [docs/DEVPOST_SUBMISSION.md](docs/DEVPOST_SUBMISSION.md)
 
 ## Author
 
-**Prakash Raj K** — Associate Professor, Sri Balaji Vidyapeeth, Puducherry, India
+**Prakash Raj K** — Sri Balaji Vidyapeeth, Puducherry, India
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT

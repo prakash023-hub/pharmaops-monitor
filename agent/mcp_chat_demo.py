@@ -87,8 +87,6 @@ def chat(question: str) -> str:
         return answer
 
     data_preview = json.dumps(rows[:10], default=str)
-    if result.get("warning"):
-        data_preview = json.dumps({"warning": result["warning"], "rows": rows[:10]}, default=str)
 
     answer_prompt = f"""You are PharmaOps AI assistant for a pharmaceutical plant manager.
 

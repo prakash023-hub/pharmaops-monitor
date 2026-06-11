@@ -1,0 +1,1 @@
+index=pharma_manufacturing _raw=*DEVIATION* | stats count

@@ -1,0 +1,128 @@
+
+<dashboard version="2" theme="light">
+    <label>PharmaOps Monitor</label>
+    <description>Temperature Deviations by Batch</description>
+    <definition><![CDATA[
+{
+	"dataSources": {
+		"ds_table": {
+			"type": "ds.search",
+			"options": {
+				"query": "search index=pharma_manufacturing sourcetype=temperature_logs.csv _raw=*DEVIATION* | rex field=_raw \"^(?<timestamp>[^,]+),(?<batch_id>[^,]+),(?<equipment_id>[^,]+),(?<product>[^,]+),(?<temperature_C>[^,]+),(?<status>[^,]+)\" | search batch_id=BATCH-* | stats count by batch_id equipment_id | sort -count",
+				"queryParameters": { "earliest": "0", "latest": "now", "sampleRatio": 1 }
+			},
+			"name": "Temperature Deviations Table"
+		},
+		"ds_anomaly": {
+			"type": "ds.search",
+			"options": {
+				"query": "search index=pharma_manufacturing sourcetype=temperature_logs.csv | rex field=_raw \"^(?<timestamp>[^,]+),(?<batch_id>[^,]+),(?<equipment_id>[^,]+),(?<product>[^,]+),(?<temperature_C>[^,]+),(?<status>[^,]+)\" | search batch_id=BATCH-* | eval _time=strptime(timestamp, \"%Y-%m-%dT%H:%M:%S\"), temperature_C=tonumber(temperature_C) | timechart span=1h avg(temperature_C) as temperature",
+				"queryParameters": { "earliest": "0", "latest": "now", "sampleRatio": 1 }
+			},
+			"name": "AI Temperature Anomaly Detection"
+		},
+		"ds_passfail": {
+			"type": "ds.search",
+			"options": {
+				"query": "search index=pharma_manufacturing sourcetype=batch_summary.csv | rex field=_raw \"^(?<timestamp>[^,]+),(?<batch_id>[^,]+),(?<product>[^,]+),(?<yield_pct>[^,]+),(?<deviation_count>[^,]+),(?<batch_status>[^,]+)\" | search batch_id=BATCH-* | stats count by batch_status",
+				"queryParameters": { "earliest": "0", "latest": "now", "sampleRatio": 1 }
+			},
+			"name": "Batch Pass Fail Status"
+		},
+		"ds_downtime": {
+			"type": "ds.search",
+			"options": {
+				"query": "search index=pharma_manufacturing sourcetype=equipment_downtime.csv | rex field=_raw \"^(?<timestamp>[^,]+),(?<equipment_id>[^,]+),(?<equipment_type>[^,]+),(?<downtime_minutes>[^,]+),(?<reason>[^,]+),(?<severity>[^,]+)\" | search equipment_id=COAT-* OR equipment_id=GRAN-* OR equipment_id=COMPRESS-* | stats sum(downtime_minutes) as total_downtime by equipment_id | sort -total_downtime",
+				"queryParameters": { "earliest": "0", "latest": "now", "sampleRatio": 1 }
+			},
+			"name": "Equipment Downtime"
+		},
+		"ds_gmp": {
+			"type": "ds.search",
+			"options": {
+				"query": "search index=pharma_manufacturing sourcetype=temperature_logs.csv | rex field=_raw \"^(?<timestamp>[^,]+),(?<batch_id>[^,]+),(?<equipment_id>[^,]+),(?<product>[^,]+),(?<temperature_C>[^,]+),(?<status>[^,]+)\" | search batch_id=BATCH-* | eval _time=strptime(timestamp, \"%Y-%m-%dT%H:%M:%S\"), temperature_C=tonumber(temperature_C) | timechart span=2h avg(temperature_C) as temperature | eval GMP_Safe_Upper=45, GMP_Safe_Lower=40",
+				"queryParameters": { "earliest": "0", "latest": "now", "sampleRatio": 1 }
+			},
+			"name": "GMP Temperature Monitoring"
+		}
+	},
+	"visualizations": {
+		"viz_table": {
+			"type": "splunk.table",
+			"options": { "count": 20, "dataOverlayMode": "none", "drilldown": "none", "showRowNumbers": false },
+			"dataSources": { "primary": "ds_table" }
+		},
+		"viz_anomaly": {
+			"type": "splunk.line",
+			"options": {
+				"yAxisAbbreviation": "auto", "xAxisTitleVisibility": "show", "yAxisTitleVisibility": "show",
+				"yAxisScale": "linear", "legendDisplay": "right", "lineWidth": 2, "nullValueDisplay": "gaps"
+			},
+			"dataSources": { "primary": "ds_anomaly" },
+			"title": "AI Temperature Anomaly Detection"
+		},
+		"viz_passfail": {
+			"type": "splunk.pie",
+			"options": { "collapseThreshold": 0.01 },
+			"dataSources": { "primary": "ds_passfail" },
+			"title": "Batch Pass/Fail Status"
+		},
+		"viz_downtime": {
+			"type": "splunk.bar",
+			"options": { "yAxisScale": "linear", "legendDisplay": "none", "dataValuesDisplay": "off" },
+			"dataSources": { "primary": "ds_downtime" },
+			"title": "Equipment Downtime by Machine"
+		},
+		"viz_gmp": {
+			"type": "splunk.line",
+			"options": {
+				"yAxisAbbreviation": "auto", "xAxisTitleVisibility": "show", "yAxisTitleVisibility": "show",
+				"yAxisScale": "linear", "legendDisplay": "right", "lineWidth": 2, "nullValueDisplay": "gaps"
+			},
+			"dataSources": { "primary": "ds_gmp" },
+			"title": "GMP Temperature Monitoring with AI Bounds"
+		}
+	},
+	"inputs": {
+		"input_global_trp": {
+			"type": "input.timerange",
+			"options": { "token": "global_time", "defaultValue": "0,now" },
+			"title": "Global Time Range"
+		}
+	},
+	"layout": {
+		"options": {},
+		"globalInputs": ["input_global_trp"],
+		"tabs": { "items": [{ "layoutId": "layout_1", "label": "Manufacturing Overview" }] },
+		"layoutDefinitions": {
+			"layout_1": {
+				"type": "grid",
+				"structure": [
+					{ "item": "viz_table", "type": "block", "position": { "x": 0, "y": 0, "w": 1440, "h": 250 } },
+					{ "item": "viz_anomaly", "type": "block", "position": { "x": 0, "y": 250, "w": 1440, "h": 300 } },
+					{ "item": "viz_passfail", "type": "block", "position": { "x": 0, "y": 550, "w": 720, "h": 300 } },
+					{ "item": "viz_downtime", "type": "block", "position": { "x": 720, "y": 550, "w": 720, "h": 300 } },
+					{ "item": "viz_gmp", "type": "block", "position": { "x": 0, "y": 850, "w": 1440, "h": 300 } }
+				],
+				"options": { "width": 1440, "height": 1150 }
+			}
+		}
+	},
+	"title": "PharmaOps Monitor",
+	"description": "Temperature Deviations by Batch",
+	"defaults": {
+		"dataSources": {
+			"ds.search": {
+				"options": {
+					"queryParameters": {
+						"latest": "$global_time.latest$",
+						"earliest": "$global_time.earliest$"
+					}
+				}
+			}
+		},
+		"visualizations": { "global": { "showProgressBar": true } }
+	}
+}
+    ]]></definition>
+</dashboard>

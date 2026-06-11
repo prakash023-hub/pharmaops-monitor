@@ -1,0 +1,167 @@
+{
+  "batch_id": "BATCH-1011",
+  "product": "Metformin_500mg",
+  "timestamp": "2026-06-11T10:50:56.335866",
+  "gmp": {
+    "gmp_score": 81.0,
+    "gmp_grade": "B \u2014 Minor Gaps",
+    "pillar_scores": {
+      "documentation": 100,
+      "process_control": 91.0,
+      "deviation_management": 94,
+      "equipment_qualification": 80,
+      "quality_oversight": 75,
+      "batch_release": 0
+    },
+    "gmp_gaps": [
+      "batch_release: 0/100 \u2014 21 CFR 211.165 \u2014 Testing and release for distribution"
+    ],
+    "gmp_status": "AT_RISK",
+    "framework": "WHO GMP + EU GMP Annex 1 + FDA 21 CFR Part 211"
+  },
+  "qms": {
+    "qms_risk_score": 20.9,
+    "qms_risk_level": "LOW",
+    "qms_action_required": "Document and close. No batch impact expected.",
+    "dimension_risks": {
+      "process_performance": 26.2,
+      "capa_effectiveness": 7.2,
+      "change_control": 35,
+      "supplier_quality": 20,
+      "data_integrity": 10,
+      "management_oversight": 27.6
+    },
+    "dimensions": {
+      "process_performance": {
+        "weight": 0.25,
+        "ich": "ICH Q10 \u00a73.2.1 \u2014 Process Performance and Product Quality Monitoring",
+        "description": "Ability to maintain CPPs within validated ranges"
+      },
+      "capa_effectiveness": {
+        "weight": 0.2,
+        "ich": "ICH Q10 \u00a73.2.2 \u2014 CAPA System",
+        "description": "Corrective and preventive action adequacy"
+      },
+      "change_control": {
+        "weight": 0.15,
+        "ich": "ICH Q10 \u00a73.2.3 \u2014 Change Management",
+        "description": "Controlled change management for process/equipment"
+      },
+      "supplier_quality": {
+        "weight": 0.1,
+        "ich": "ICH Q10 \u00a72.7 \u2014 Materials Management",
+        "description": "Raw material and supplier quality oversight"
+      },
+      "data_integrity": {
+        "weight": 0.15,
+        "ich": "ICH Q10 + ALCOA+ principles",
+        "description": "Attributable, Legible, Contemporaneous, Original, Accurate data"
+      },
+      "management_oversight": {
+        "weight": 0.15,
+        "ich": "ICH Q10 \u00a73.3 \u2014 Management Review",
+        "description": "Senior management review of quality metrics"
+      }
+    },
+    "ich_framework": "ICH Q10 Pharmaceutical Quality System",
+    "trend": "STABLE",
+    "ai_mitigation": "AI early detection reduced QMS risk by ~40% vs manual monitoring"
+  },
+  "pv": {
+    "pv_risk_score": 93.6,
+    "pv_risk_level": "CRITICAL",
+    "pv_action": "Report to PV team immediately",
+    "patient_safety_risk": "Modified drug release profile \u2014 bioavailability change for extended-release products",
+    "therapeutic_class": "Antidiabetic",
+    "pv_reportable": false,
+    "ich_pv_reference": "ICH E2E + ICH Q8 CQA \u2014 dissolution/release profile",
+    "who_pv_reference": "WHO \u2014 Process validation requirements",
+    "pv_notification_required": true,
+    "regulatory_reporting": "Internal QA documentation only"
+  },
+  "ich": {
+    "anomaly_type": "temperature_deviation",
+    "failure_mode": "coating_thermostat_drift",
+    "cqa": "Equipment temperature control system",
+    "risk_statement": "Thermostat drift indicates loss of process control \u2014 ICH Q10 CAPA and ICH Q9 risk reassessment required.",
+    "ich_guidelines": [
+      {
+        "guideline": "Q7",
+        "title": "GMP for Active Pharmaceutical Ingredients",
+        "relevance": "Manufacturing process controls, deviation handling, batch records.",
+        "sections": [
+          "Section 8: Production and In-Process Controls",
+          "Section 10: Storage and Distribution",
+          "Section 13: Change Control",
+          "Section 14: Rejection and Reuse of Materials"
+        ]
+      },
+      {
+        "guideline": "Q9(R1)",
+        "title": "Quality Risk Management",
+        "relevance": "Risk assessment for deviation impact on patient safety and product quality.",
+        "sections": [
+          "Section 4.3 Risk Assessment",
+          "Section 4.4 Risk Control",
+          "Section 4.5 Risk Communication",
+          "Section 4.6 Risk Review"
+        ]
+      },
+      {
+        "guideline": "Q10",
+        "title": "Pharmaceutical Quality System",
+        "relevance": "CAPA system, change management, management review of deviations.",
+        "sections": [
+          "Section 3.2.1 Process Performance and Product Quality Monitoring",
+          "Section 3.2.2 CAPA System",
+          "Section 3.2.3 Change Management System",
+          "Section 3.3 Management Review"
+        ]
+      },
+      {
+        "guideline": "Q1A(R2)",
+        "title": "Stability Testing of New Drug Substances and Products",
+        "relevance": "Temperature excursions affect shelf-life and stability data integrity.",
+        "sections": [
+          "2.1.1 General",
+          "2.2.2 Storage Conditions"
+        ]
+      }
+    ],
+    "fda_citations": [
+      {
+        "section": "211.68",
+        "requirement": "Automatic, mechanical, and electronic equipment \u2014 calibration"
+      },
+      {
+        "section": "211.100",
+        "requirement": "Written procedures; deviations must be recorded and justified"
+      },
+      {
+        "section": "211.192",
+        "requirement": "Production record review \u2014 investigation of unexplained discrepancies"
+      },
+      {
+        "section": "211.67",
+        "requirement": "Equipment cleaning and maintenance"
+      }
+    ],
+    "regulatory_summary": "This deviation affects Equipment temperature control system. Applicable: Q7, Q9(R1), Q10, Q1A(R2) + FDA 21 CFR \u00a7211.68, \u00a7211.100, \u00a7211.192, \u00a7211.67."
+  },
+  "ich_risk": {
+    "severity": 3,
+    "occurrence": 2,
+    "detectability": 1,
+    "rpn": 6,
+    "risk_level": "LOW",
+    "method": "ICH Q9(R1) Risk Priority Number (RPN)",
+    "recommendation": "Standard deviation investigation per ICH Q7 Section 14"
+  },
+  "industry_improvement": {
+    "detection_time_reduction_pct": 99.8,
+    "investigation_time_reduction_pct": 99.4,
+    "cost_saving_per_deviation_lakhs": 5.2,
+    "batch_loss_prevented_lakhs": 10.4
+  },
+  "regulatory_summary": "GMP Score: 81.0/100 (B \u2014 Minor Gaps). QMS Risk: 20.9/100 (LOW). PV Risk: 93.6/100 (CRITICAL). ICH Q9 RPN: 6 (LOW). Action: Document and close. No batch impact expected."
+}

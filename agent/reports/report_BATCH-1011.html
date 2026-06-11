@@ -36,42 +36,45 @@
   <div class="report">
     <div class="header">
       <h1>PharmaOps Monitor — GMP Deviation Report</h1>
-      <p>Autonomous investigation by Splunk MCP + Google Gemini</p>
+      <p>Autonomous investigation — Splunk MCP + Gemini | FDA 21 CFR + ICH Q7/Q8/Q9/Q10</p>
       <div class="badge-row">
         <span class="badge major">GMP Impact: Major</span>
         <span class="agent-tag">AI-Generated CAPA</span>
+        <span class="agent-tag">QA: RELEASE_FOR_CAPA</span>
       </div>
     </div>
     <dl class="meta">
-      <div><dt>Report ID</dt><dd>DEV-BATCH-1011-202606031929</dd></div>
+      <div><dt>Report ID</dt><dd>DEV-BATCH-1011-202606111050</dd></div>
       <div><dt>Batch ID</dt><dd>BATCH-1011</dd></div>
-      <div><dt>Anomaly</dt><dd>Temperature Deviation (3.2σ)</dd></div>
-      <div><dt>Deviation Events</dt><dd>N/A</dd></div>
-      <div><dt>Generated</dt><dd>2026-06-03 19:29:54</dd></div>
-      <div><dt>Financial Impact</dt><dd>₹(INR lakhs):</dd></div>
-      <div><dt>Confidence</dt><dd>4/5</dd></div>
+      <div><dt>Anomaly</dt><dd>Temperature Deviation (2.0σ)</dd></div>
+      <div><dt>Deviation Events</dt><dd>6</dd></div>
+      <div><dt>Generated</dt><dd>2026-06-11 10:50:56</dd></div>
+      <div><dt>Financial Impact</dt><dd>₹13.8-45.2 lakhs</dd></div>
+      <div><dt>Confidence</dt><dd>4.5</dd></div>
     </dl>
     <div class="section">
       <h2>Root Cause Analysis</h2>
-      <div class="content"><p>The primary root cause is a <strong>failure in the data acquisition and monitoring system</strong>, specifically a connectivity issue preventing SPLUNK MCP from retrieving critical process data.</p>
-<ul>
-<li><strong>Evidence:</strong> The recurring error <code>{&quot;error&quot;: &quot;&lt;urlopen error [Errno 61] Connection refused&gt;&quot;}</code> for all queried data points (Temp, Downtime, Batch) strongly indicates that SPLUNK MCP was unable to establish a network connection to its data sources (e.g., servers, PLCs, historians). <code>Errno 61: Connection refused</code> means that a server was actively refusing the connection request from the client.</li>
-<li><strong>Interpretation:</strong> This is not a direct confirmation of a physical temperature deviation within Batch BATCH-1011, but rather a symptom of a systemic monitoring failure. The &quot;temperature_deviation&quot; anomaly likely triggered because the system either received no data (data starvation) or an error state, which was interpreted as a deviation, rather than a confirmed out-of-specification temperature reading from the batch itself. The monitoring system itself is compromised, leading to a loss of data visibility and control assurance.</li>
-</ul></div>
+      <div class="content"><p>The root cause is identified as coating_thermostat_drift on equipment_id COAT-02, leading to significant temperature_deviations for BATCH-1011 (Metformin_500mg). Splunk evidence from 2026-01-06 for COAT-02 shows 6 instances of temperature deviations, with readings ranging from a minimum of 36.21°C to a maximum of 49.72°C. These fluctuations indicate a loss of temperature control within the coating equipment, directly supporting the detected anomaly and failure mode.</p>
+<p>CQA Affected (ICH Q8): The critical quality attribute affected is the Equipment temperature control system. This directly impacts critical product attributes such as drug dissolution profile, coating uniformity and integrity, and the chemical stability of the drug product and API during the coating process.</p></div>
+    </div>
+    
+    <div class="section">
+      <h2>ICH Regulatory Compliance (Q7 / Q8 / Q9 / Q10)</h2>
+      <div class="content">
+        <p><strong>CQA Affected (ICH Q8):</strong> Equipment temperature control system</p>
+        <p><strong>ICH Q9 Risk Level:</strong> LOW
+           (RPN=6 — ICH Q9(R1) Risk Priority Number (RPN))</p>
+        <p>Thermostat drift indicates loss of process control — ICH Q10 CAPA and ICH Q9 risk reassessment required.</p>
+        <h3 class="section-title">ICH QA Compliance Assessment</h3>
+        <ul><li><strong>ICH Q7</strong>: Compliant: The investigation aligns with Q7 principles for production and in-process controls, deviation handling, and disposition of affected materials (e.g., quarantine, equipment removal, testing).</li><li><strong>ICH Q8</strong>: Gap: The CQA itself is misidentified as 'Equipment temperature control system' rather than the product attributes it impacts (e.g., dissolution, stability).</li><li><strong>ICH Q9</strong>: Gap: The risk assessment (RPN, severity, occurrence, and overall risk level) is inconsistent with the stated GMP impact and potential CQA impact, leading to an undervaluation of the risk. Needs re-evaluation.</li><li><strong>ICH Q10</strong>: Compliant: The proposed immediate and preventive CAPAs align well with Q10 principles for Process Performance and Product Quality Monitoring (3.2.1) and the CAPA System (3.2.2).</li></ul>
+        <h3 class="section-title">Applicable ICH Guidelines</h3>
+        <ul><li><strong>Q7</strong> — GMP for Active Pharmaceutical Ingredients<br><span style="color:#64748b;font-size:0.85rem">Manufacturing process controls, deviation handling, batch records.</span></li><li><strong>Q9(R1)</strong> — Quality Risk Management<br><span style="color:#64748b;font-size:0.85rem">Risk assessment for deviation impact on patient safety and product quality.</span></li><li><strong>Q10</strong> — Pharmaceutical Quality System<br><span style="color:#64748b;font-size:0.85rem">CAPA system, change management, management review of deviations.</span></li><li><strong>Q1A(R2)</strong> — Stability Testing of New Drug Substances and Products<br><span style="color:#64748b;font-size:0.85rem">Temperature excursions affect shelf-life and stability data integrity.</span></li></ul>
+        <p style="font-size:0.85rem;color:#64748b">Also: FDA 21 CFR Part 211 — 21 CFR 211.68, 21 CFR 211.100, 21 CFR 211.192, 21 CFR 211.67</p>
+      </div>
     </div>
     <div class="section">
-      <h2>Corrective &amp; Preventive Action (CAPA)</h2>
-      <div class="content"><p><strong>Immediate Actions (C1):</strong></p>
-<p class="numbered">1.  <strong>Isolate Batch:</strong> Immediately place BATCH-1011 on <strong>Quarantine Hold</strong> until the integrity of its storage/processing conditions can be fully verified.</p>
-<p class="numbered">2.  <strong>Manual Monitoring:</strong> Implement immediate, temporary <strong>manual temperature monitoring</strong> of the batch and its environment using calibrated, independent temperature devices at defined intervals.</p>
-<p class="numbered">3.  <strong>IT/OT Emergency Response:</strong> Engage IT and Operational Technology (OT) support immediately to investigate and resolve the <code>Connection refused</code> error for SPLUNK MCP. This includes checking network connectivity, server status, firewall rules, application logs of SPLUNK MCP, and logs of all relevant data source systems.</p>
-<p class="numbered">4.  <strong>Restore Monitoring:</strong> Prioritize restoring the automated temperature monitoring system to full operational status.</p>
-<p><strong>Preventative Actions (A2):</strong></p>
-<p class="numbered">1.  <strong>Root Cause Analysis (Systemic):</strong> Conduct a thorough Root Cause Analysis (RCA) to determine *why* the connection was refused (e.g., unexpected server shutdown, resource exhaustion, network misconfiguration, security update conflict, software bug).</p>
-<p class="numbered">2.  <strong>Monitoring System Health Checks:</strong> Implement enhanced proactive monitoring and alerting for the health of critical monitoring systems themselves (e.g., network connectivity, service status, database availability), not just process parameter deviations.</p>
-<p class="numbered">3.  <strong>Redundancy &amp; Failover:</strong> Evaluate and implement redundancy or failover mechanisms for critical data acquisition and monitoring components to prevent single points of failure.</p>
-<p class="numbered">4.  <strong>SOP Review &amp; Update:</strong> Revise Standard Operating Procedures (SOPs) for handling monitoring system failures, including clear protocols for batch impact assessment, manual monitoring requirements, and escalation paths.</p>
-<p class="numbered">5.  <strong>Training:</strong> Provide refresher training to relevant personnel on updated SOPs and emergency response procedures for system anomalies.</p></div>
+      <h2>Corrective &amp; Preventive Action (CAPA per ICH Q10)</h2>
+      <div class="content"><p>See full analysis below.</p></div>
     </div>
     <div class="footer">
       PharmaOps Monitor · Splunk Agentic Ops Hackathon 2026 · Observability Track<br>
