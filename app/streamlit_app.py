@@ -11,6 +11,8 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "agent"))
 
+from env_utils import gemini_key_ok  # loads .env on import
+
 from impact_calculator import calculate_impact
 from multi_agent import run_multi_agent
 from orchestrator import check_system
@@ -28,6 +30,20 @@ st.markdown("""
 
 # ── Sidebar ─────────────────────────────────────────────────────────
 with st.sidebar:
+    if not gemini_key_ok():
+        st.warning("Gemini API key required for AI agents")
+        pasted = st.text_input(
+            "Paste Gemini API Key",
+            type="password",
+            placeholder="AIzaSy... (39 characters)",
+            help="Get free key: aistudio.google.com/apikey",
+        )
+        if pasted and len(pasted.strip()) >= 30:
+            os.environ["GEMINI_API_KEY"] = pasted.strip()
+            st.rerun()
+        st.caption("Or add to `.env` in project root and restart Streamlit.")
+        st.divider()
+
     st.header("⚡ System Status")
     health = check_system()
     c1, c2 = st.columns(2)
@@ -36,10 +52,13 @@ with st.sidebar:
     c2.metric("REST", "✅" if health.get("splunk_rest") else "❌")
     c1.metric("Data", "✅" if health.get("csv") else "❌")
     c2.metric("Gemini", "✅" if health.get("gemini") else "❌")
+    if health.get("gemini_note"):
+        st.caption(health["gemini_note"])
     active = health.get("recommended", "csv")
     st.caption(f"Active data layer: **{active}**")
     if not mcp_ok:
-        st.caption("MCP unavailable → REST fallback (live Splunk data)")
+        note = health.get("mcp_note", "REST fallback active")
+        st.caption(f"MCP: {note}")
 
     st.divider()
     st.header("💰 Impact Calculator")
@@ -74,8 +93,8 @@ with tab2:
     | **QA Review Agent** | Validates FDA 21 CFR + ICH Q7/Q8/Q9/Q10, approves/rejects |
     """)
 
-    if not os.getenv("GEMINI_API_KEY"):
-        st.error("Set `GEMINI_API_KEY` to run agents.")
+    if not gemini_key_ok():
+        st.error("Gemini API key required — paste it in the sidebar (left) or add to `.env`")
     else:
         if st.button("🚀 Run Multi-Agent Pipeline", type="primary", use_container_width=True):
             with st.spinner("Detection → Investigation → QA Review..."):
@@ -154,8 +173,8 @@ with tab4:
     st.markdown("Ask in plain English — Gemini writes Splunk query, live data answers.")
     q = st.text_input("Plant Manager Question", placeholder="What batches failed and why?")
     if st.button("Ask", type="primary"):
-        if not os.getenv("GEMINI_API_KEY"):
-            st.error("Set GEMINI_API_KEY: export GEMINI_API_KEY=your_key then restart ./run_streamlit.sh")
+        if not gemini_key_ok():
+            st.error("Paste your Gemini API key in the **sidebar** (left panel).")
         elif q:
             with st.spinner("Querying Splunk + Gemini..."):
                 try:
